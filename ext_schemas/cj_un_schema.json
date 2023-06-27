@@ -1,0 +1,753 @@
+{
+    "type": "CityJSONExtension",
+    "name": "UtilityNetwork",
+    "uri": "https://github.com/idiap/cjutilitynetwork/blob/main/utilitynetwork.ext.json",
+    "version": "0.0.1",
+    "versionCityJSON": "1.1",
+    "description": "Extension for Utility Networks",
+    "definitions":
+    {
+        "Length":
+        {
+            "type": "object",
+            "properties":
+            {
+                "value":
+                {
+                    "type": "number"
+                },
+                "uom":
+                {
+                    "type": "string"
+                }
+            },
+            "required":
+            [
+                "value",
+                "uom"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "extraRootProperties":
+    {},
+    "extraAttributes":
+    {},
+    "extraCityObjects":
+    {
+        "+AbstractNetworkFeature":
+        {
+            "allOf":
+            [
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+AbstractNetworkFeature",
+                                "+AbstractDistributionFeature",
+                                "+AbstractPipe",
+                                "+RoundPipe"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "function":
+                                {
+                                    "enum":
+                                    [
+                                        "supply",
+                                        "disposal",
+                                        "communication"
+                                    ]
+                                },
+                                "usage":
+                                {
+                                    "enum":
+                                    [
+                                        "supply",
+                                        "disposal",
+                                        "communication"
+                                    ]
+                                },
+                                "connectedCityObject":
+                                {
+                                    "type": "string"
+                                },
+                                "yearOfConstruction":
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                "status":
+                                {
+                                    "type": "string"
+                                },
+                                "locationQuality":
+                                {
+                                    "type": "string"
+                                },
+                                "elevationQuality":
+                                {
+                                    "type": "string"
+                                },
+                                "consistsOf":
+                                {
+                                    "type": "string",
+                                    "description": "id of +AbstractNetworkFeature"
+                                },
+                                "hasMaterial":
+                                {
+                                    "type": "string"
+                                },
+                                "topoGraph":
+                                {
+                                    "type": "string",
+                                    "description": "id of +FeatureGraph"
+                                },
+                                "occupiedHollowSpace":
+                                {
+                                    "type": "string"
+                                },
+                                "lod1Geometry":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "parents":
+                        {
+                            "type": "array",
+                            "items":
+                            {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "additionalProperties": true
+                }
+            ]
+        },
+        "+AbstractDistributionFeature":
+        {
+            "allOf":
+            [
+                {
+                    "$ref": "#/extraCityObjects/+AbstractNetworkFeature"
+                },
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+AbstractDistributionFeature",
+                                "+AbstractPipe",
+                                "+RoundPipe"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "class":
+                                {
+                                    "enum":
+                                    [
+                                        "supply",
+                                        "disposal",
+                                        "communication"
+                                    ]
+                                },
+                                "functionOfLine":
+                                {
+                                    "enum":
+                                    [
+                                        "supply",
+                                        "disposal",
+                                        "communication"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "additionalProperties": true
+                }
+            ]
+        },
+        "+AbstractPipe":
+        {
+            "allOf":
+            [
+                {
+                    "$ref": "#/extraCityObjects/+AbstractDistributionFeature"
+                },
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+AbstractPipe",
+                                "+RoundPipe"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "isGravity":
+                                {
+                                    "type": "boolean"
+                                },
+                                "exteriorWidth":
+                                {
+                                    "$ref": "#/definitions/Length"
+                                },
+                                "exteriorHeight":
+                                {
+                                    "$ref": "#/definitions/Length"
+                                },
+                                "exteriorDiameter":
+                                {
+                                    "$ref": "#/definitions/Length"
+                                }
+                            }
+                        }
+                    },
+                    "additionalProperties": true
+                }
+            ]
+        },
+        "+RoundPipe":
+        {
+            "allOf":
+            [
+                {
+                    "$ref": "#/extraCityObjects/+AbstractDistributionFeature"
+                },
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+RoundPipe"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "interiorDiameter":
+                                {
+                                    "$ref": "#/definitions/Length"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "+AbstractCommodity":
+        {
+            "allOf":
+            [
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+AbstractCommodity",
+                                "+LiquidMedium"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "isClassifiedBy":
+                                {
+                                    "type": "string"
+                                },
+                                "associatedNetwork":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "parents":
+                        {
+                            "type": "array",
+                            "items":
+                            {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "additionalProperties": true
+                }
+            ]
+        },
+        "+LiquidMedium":
+        {
+            "allOf":
+            [
+                {
+                    "$ref": "#/extraCityObjects/+AbstractCommodity"
+                },
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+LiquidMedium"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "type":
+                                {
+                                    "type": "string"
+                                },
+                                "isCorrosive":
+                                {
+                                    "type": "boolean"
+                                },
+                                "isExplosive":
+                                {
+                                    "type": "boolean"
+                                },
+                                "flammable":
+                                {
+                                    "type": "boolean"
+                                },
+                                "electricConductivity":
+                                {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                },
+                                "phValueRange":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "number"
+                                    },
+                                    "maxItems": 2
+                                },
+                                "temperatureRange":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "number"
+                                    },
+                                    "maxItems": 2
+                                },
+                                "flowRateRange":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "number"
+                                    },
+                                    "maxItems": 2
+                                },
+                                "pressureRange":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "number"
+                                    },
+                                    "maxItems": 2
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "+Network":
+        {
+            "allOf":
+            [
+                {
+                    "$ref": "cityobjects.schema.json#/_AbstractCityObject"
+                },
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+Network"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "class":
+                                {
+                                    "enum":
+                                    [
+                                        "HighVoltageNetwork",
+                                        "MediumVoltageNetwork",
+                                        "LowVoltageNetwork",
+                                        "HighPressureNetwork",
+                                        "MediumPressureNetwork",
+                                        "LowPressureNetwork"
+                                    ]
+                                },
+                                "function":
+                                {
+                                    "enum":
+                                    [
+                                        "supply",
+                                        "disposal",
+                                        "communication"
+                                    ]
+                                },
+                                "usage":
+                                {
+                                    "enum":
+                                    [
+                                        "supply",
+                                        "disposal",
+                                        "communication"
+                                    ]
+                                },
+                                "transportedMedium":
+                                {
+                                    "anyOf":
+                                    [
+                                        {
+                                            "$ref": "#/extraCityObjects/+AbstractCommodity"
+                                        },
+                                        {
+                                            "$ref": "#/extraCityObjects/+LiquidMedium"
+                                        }
+                                    ]
+                                },
+                                "topoGraph":
+                                {
+                                    "type": "string",
+                                    "description": "id of +NetworkGraph"
+                                }
+                            },
+                            "component":
+                            {
+                                "type": "string",
+                                "description": "id of +AbstractNetworkFeature"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "+NetworkGraph":
+        {
+            "allOf":
+            [
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+NetworkGraph"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "featureGraph":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "string",
+                                        "description": "id of +FeatureGraph"
+                                    }
+                                },
+                                "interFeatureLink":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "string",
+                                        "description": "id of +InterFeatureLink"
+                                    }
+                                },
+                                "networkLink":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "string",
+                                        "description": "id of +NetworkLink"
+                                    }
+                                }
+                            }
+                        },
+                        "parents":
+                        {
+                            "type": "array",
+                            "items":
+                            {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "+FeatureGraph":
+        {
+            "allOf":
+            [
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+FeatureGraph"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "interiorFeatureLink":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "string",
+                                        "description": "id of a +InteriorFeatureLink"
+                                    }
+                                },
+                                "node":
+                                {
+                                    "type": "array",
+                                    "items":
+                                    {
+                                        "type": "string",
+                                        "description": "id of a +Node"
+                                    },
+                                    "minItems": 1
+                                }
+                            }
+                        },
+                        "children":
+                        {
+                            "type": "array",
+                            "items":
+                            {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required":
+                    [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "+Node":
+        {
+            "allOf":
+            [
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+Node"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "NodeValue":
+                                {
+                                    "enum":
+                                    [
+                                        "interior",
+                                        "exterior"
+                                    ]
+                                }
+                            }
+                        },
+                        "geometry":
+                        {
+                            "type": "array",
+                            "items":
+                            {
+                                "allOf":
+                                [
+                                    {
+                                        "$ref": "geomprimitives.schema.json#/MultiPoint"
+                                    }
+                                ],
+                                "minItems": 0,
+                                "maxItems": 1
+                            }
+                        }
+                    },
+                    "required":
+                    [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "+AbstractLink":
+        {
+            "allOf":
+            [
+                {
+                    "properties":
+                    {
+                        "type":
+                        {
+                            "enum":
+                            [
+                                "+AbstractLink",
+                                "+InteriorFeatureLink",
+                                "+InterFeatureLink"
+                            ]
+                        },
+                        "attributes":
+                        {
+                            "type": "object",
+                            "properties":
+                            {
+                                "start":
+                                {
+                                    "type": "string",
+                                    "description": "id of a +Node"
+                                },
+                                "end":
+                                {
+                                    "type": "string",
+                                    "description": "id of a +Node"
+                                },
+                                "direction":
+                                {
+                                    "enum":
+                                    [
+                                        "+",
+                                        "-"
+                                    ]
+                                }
+                            }
+                        },
+                        "geometry":
+                        {
+                            "type": "array",
+                            "items":
+                            {
+                                "allOf":
+                                [
+                                    {
+                                        "$ref": "geomprimitives.schema.json#/MultiLineString"
+                                    }
+                                ],
+                                "minItems": 0,
+                                "maxItems": 1
+                            }
+                        }
+                    },
+                    "required":
+                    [
+                        "type"
+                    ],
+                    "additionalProperties": true
+                }
+            ]
+        },
+        "+NetworkLink":
+        {
+            "allOf":
+            [
+                {
+                    "$ref": "#/extraCityObjects/+AbstractLink"
+                }
+            ]
+        },
+        "+InteriorFeatureLink":
+        {
+            "allOf":
+            [
+                {
+                    "$ref": "#/extraCityObjects/+AbstractLink"
+                }
+            ]
+        },
+        "+InterFeatureLink":
+        {
+            "allOf":
+            [
+                {
+                    "$ref": "#/extraCityObjects/+AbstractLink"
+                },
+                {
+                    "properties":
+                    {
+                        "attributes":
+                        {
+                            "InterFeatureLinkValue":
+                            {
+                                "type": "object",
+                                "items":
+                                {
+                                    "enum":
+                                    [
+                                        "connects",
+                                        "containts"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
