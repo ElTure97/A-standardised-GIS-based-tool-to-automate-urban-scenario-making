@@ -26,6 +26,12 @@ from ding0.tools.logger import setup_logger
 from ding0.tools.results import save_nd_to_pickle
 from sqlalchemy.orm import sessionmaker
 import oedialect
+import json
+
+with open("config/ding0_config.json", "r") as f:
+    ding0_data = json.load(f)
+MV_district = ding0_data["MV_district"]
+
 
 
 # define logger
@@ -41,7 +47,7 @@ session = sessionmaker(bind=engine)()
 nd = NetworkDing0(name='network')
 
 # choose MV Grid Districts to import
-mv_grid_districts = [1249]
+mv_grid_districts = [int(MV_district)]
 
 # run DING0 on selected MV Grid District
 nd.run_ding0(session=session,
