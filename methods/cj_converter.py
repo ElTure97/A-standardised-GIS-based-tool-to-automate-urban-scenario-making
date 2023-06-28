@@ -213,10 +213,13 @@ class CityJSONCreator(JSON_Writer):
                 }]
             }
 
+            # add energy attributes --> keep track of extension position in the list of extensions
+            building["attributes"].update(ext[0][index])
 
-            for i in range(len(ext_name)):
-                building["attributes"].update(ext[i][index])
-                # building["attributes"][f"+{list(ext_name[i].keys())[0]}"] = ext[i][index]
+            # for i in range(len(ext_name)):
+            #     building["attributes"].update(ext[i][index])
+
+            #     building["attributes"][f"+{list(ext_name[i].keys())[0]}"] = ext[i][index]
 
             # part of the code specific for energy extension integration
             if building["geometry"][0]["type"] == "Solid":

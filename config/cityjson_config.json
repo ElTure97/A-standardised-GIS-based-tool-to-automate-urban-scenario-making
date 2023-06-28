@@ -5,8 +5,15 @@
         "name": "Energy",
         "version": "1.1",
         "url": "https://raw.githubusercontent.com/ozgetufan/cjenergy/master/schemas/extensions/energy.ext.json"
-          }
-        }
+      }
+    },
+    {
+      "utilty_network": {
+        "name": "UtilityNetwork",
+        "version": "1.1",
+        "url": "https://raw.githubusercontent.com/idiap/cjutilitynetwork/main/utilitynetwork.ext.json"
+      }
+    }
       ],
   "LoD": "1.2",
   "crs_url": "https://www.opengis.net/def/crs/EPSG/0/32632"

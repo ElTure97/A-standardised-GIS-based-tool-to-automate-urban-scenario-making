@@ -34,6 +34,7 @@ gdf = gpd.read_file(f"buildings/output/{city}_{building_target}")
 ext_list = []
 
 # further ADEs modules must be added here following the same syntax
+# be careful and keep track of the indeces of ades in ext_list to allow for proper working cj_converter.py module
 energy_ADE_obj = EnergyADE(gdf)
 energy_ext = energy_ADE_obj.map_ext()
 ext_list.append(energy_ext)
