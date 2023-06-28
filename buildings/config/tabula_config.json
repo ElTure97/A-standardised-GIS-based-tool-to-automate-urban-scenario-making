@@ -1,0 +1,13 @@
+{
+  "input_file_path": "helper/TABULA.xlsm",
+  "sheet_name": "Tab.Type.Building",
+  "country_code_column_name": "Code_Country",
+  "country_code_to_filter": "IT",
+  "distribution_code": "020",
+  "columns_of_interest": [
+    "Code_BuildingType",
+    "Code_BuildingSizeClass",
+    "Year1_Building",
+    "Year2_Building"
+  ]
+}

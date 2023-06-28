@@ -1,0 +1,5 @@
+name,bus0,bus1,s_nom,r,x,type,type_info
+Transformer_mv_grid_1249_1,Busbar_mvgd_1249_HV,Busbar_mvgd_1249_MV,63.0,,,63 MVA 110/20 kV,63 MVA 110/20 kV
+Transformer_mv_grid_1249_2,Busbar_mvgd_1249_HV,Busbar_mvgd_1249_MV,63.0,,,63 MVA 110/20 kV,63 MVA 110/20 kV
+Transformer_mv_grid_1249_3,Busbar_mvgd_1249_HV,Busbar_mvgd_1249_MV,63.0,,,63 MVA 110/20 kV,63 MVA 110/20 kV
+Transformer_mv_grid_1249_4,Busbar_mvgd_1249_HV,Busbar_mvgd_1249_MV,63.0,,,63 MVA 110/20 kV,63 MVA 110/20 kV

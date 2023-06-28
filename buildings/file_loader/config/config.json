@@ -1,0 +1,96 @@
+{
+    "application_name": "GIS_tool",
+    "address": "Via Paolo Borsellino, 38, 10138, Torino TO, Italy",
+    "provincia": "Torino",
+    "comune": "Torino",
+    "nazione": "Italy",
+    "NUTS3": "ITC11",
+    "LAU2": "001272",
+    "h_slm": 239,
+    "crs": "EPSG:4326",
+    "zona_UTM": 32,
+    "min_bounds_coordinates": [
+        166021.443,
+        0,
+        0
+    ],
+    "distance": 1000,
+    "resolution": 200,
+    "target": "building",
+    "building_target": "residential",
+    "building_filtering_values": {
+        "not_specified": ["yes", "residential"],
+        "AB": ["apartments", "dormitory"],
+        "SFH": ["detached", "house"],
+        "MFH": [],
+        "TH": []
+    },
+    "required_features": [
+        "geometry",
+        "height",
+        "age",
+        "building:use",
+        "building:levels",
+        "building:area",
+        "building:GFA",
+        "building:type",
+        "building:families",
+        "building:people",
+        "building:sez",
+        "tabula",
+        "POD"
+    ],
+    "shapefile": "study_case/Torino/shapefile",
+    "DEM": {
+        "DSM": "study_case/Torino/DEM/DSM/file.tif",
+        "DTM": "study_case/Torino/DEM/DTM/file.tif"
+    },
+    "sezioni_di_censimento": {
+        "shp": "study_case/Torino/sezioni_di_censimento/shp",
+        "csv": "study_case/Torino/sezioni_di_censimento/csv/R01_indicatori_2011_sezioni.csv",
+        "metadata": {
+            "metadata_file": "study_case/Torino/sezioni_di_censimento/csv/metadata/tracciato_2011_sezioni.csv",
+            "fields": [
+                "SEZ2011",
+                "NSEZ",
+                "ACE",
+                "CODLOC",
+                "CODASC",
+                "P1",
+                "PF1",
+                "PF2",
+                "E1",
+                "E2",
+                "E3",
+                "E4",
+                "E5",
+                "E6",
+                "E7",
+                "E8",
+                "E9",
+                "E10",
+                "E11",
+                "E12",
+                "E13",
+                "E14",
+                "E15",
+                "E16",
+                "E17",
+                "E18",
+                "E19",
+                "E20",
+                "E21",
+                "E22",
+                "E23",
+                "E24",
+                "E25",
+                "E26",
+                "E27"
+            ],
+            "id_to_select": [
+                "NSEZ",
+                "SEZCENS"
+            ]
+        }
+    }
+}
