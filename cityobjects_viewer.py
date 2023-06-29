@@ -6,4 +6,4 @@ extraCityObjects = config_data["extraCityObjects"]
 
 city_objs = extraCityObjects.keys()
 
-city_bj_list = list(city_objs)
+city_obj_list = list(city_objs)

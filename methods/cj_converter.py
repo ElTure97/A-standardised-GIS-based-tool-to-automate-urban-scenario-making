@@ -105,7 +105,7 @@ class CityJSONCreator(JSON_Writer):
 
         return no_of_accomodations, avg_area
 
-    def create_CJ(self, bbox, bounds, ext_name, ext, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target):
+    def create_CJ(self, bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target):
         self.cityjson_data["vertices"] = []
         for index, row in self.gdf.iterrows():
             geom = row[self.headers[12]]
@@ -213,11 +213,9 @@ class CityJSONCreator(JSON_Writer):
                 }]
             }
 
-            # add energy attributes --> keep track of extension position in the list of extensions
-            building["attributes"].update(ext[0][index])
-
-            # for i in range(len(ext_name)):
-            #     building["attributes"].update(ext[i][index])
+            # iterate over building attributes extensions
+            for i in range(len(ext_bld)):
+                 building["attributes"].update(ext_bld[i][index])
 
             #     building["attributes"][f"+{list(ext_name[i].keys())[0]}"] = ext[i][index]
 
@@ -266,6 +264,6 @@ class CityJSONCreator(JSON_Writer):
                 self.cityjson_data["vertices"][v][i] = round((vert - transl)/scal)
         return self.cityjson_data
 
-    def write_json(self, bbox, bounds, ext_name, ext, lod, crs, crs_url, zone, city, nation, building_target, nuts3, lau2):
+    def write_json(self, bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, building_target, nuts3, lau2):
         path = f"output/{city}_{building_target}.json"
-        super().write_json(path, self.create_CJ(bbox, bounds, ext_name, ext, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target))
+        super().write_json(path, self.create_CJ(bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target))

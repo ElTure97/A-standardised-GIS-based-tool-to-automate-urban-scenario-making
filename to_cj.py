@@ -31,13 +31,15 @@ bbox = tuple(bbox_data["bounding_box_z"])
 gdf = gpd.read_file(f"buildings/output/{city}_{building_target}")
 # headers = list(gdf.columns)
 
-ext_list = []
+# create two empty lists respectively for building objects extension and for city objects extension
+ext_bld_list = []
+ext_city_list = []
 
 # further ADEs modules must be added here following the same syntax
-# be careful and keep track of the indeces of ades in ext_list to allow for proper working cj_converter.py module
+# pay attention to append the extension to the right list since according to that, the extension will be applied to buildings or city
 energy_ADE_obj = EnergyADE(gdf)
 energy_ext = energy_ADE_obj.map_ext()
-ext_list.append(energy_ext)
+ext_bld_list.append(energy_ext)
 
 cj_creator = CityJSONCreator(gdf)
-cj_creator.write_json(bbox, bounds, ades, ext_list, lod, crs, crs_url, UTM_zone, city, nation, building_target, nuts3, lau2)
+cj_creator.write_json(bbox, bounds, ades, ext_bld_list, ext_city_list, lod, crs, crs_url, UTM_zone, city, nation, building_target, nuts3, lau2)
