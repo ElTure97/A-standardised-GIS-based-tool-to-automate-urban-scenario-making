@@ -149,7 +149,10 @@ class UtilityNetworkADE:
                         "attributes":
                             {
                                 "NodeValue": nodeValue,
-                                "NominalVoltage": int(bus_elem['v_nom'])
+                                "nominalVoltage": {
+                                    "value": round(float(bus_elem['v_nom']), 1),
+                                    "uom": "kV"
+                                }
                             },
                         "geometry":
                             [
@@ -179,10 +182,23 @@ class UtilityNetworkADE:
                         {
                             "start": line_elem['bus0'],
                             "end": line_elem['bus1'],
-                            "lenght": line_elem['lenght'],
-                            "r": line_elem['r'], # resistance
-                            "x": line_elem['x'], # impedence
-                            "nominalPower": round(float(line_elem['s_nom']), 3),
+                            "kind": line_elem['kind'],
+                            "lenght": {
+                                "value": float(line_elem['lenght']),
+                                "uom": "km"
+                            },
+                            "r": {
+                                "value": float(line_elem['r']),
+                                "uom": "Ω" # uom to be checked
+                            },
+                            "x": {
+                                "value": float(line_elem['x']),
+                                "uom": "Ω"  # uom to be checked
+                                  },
+                            "nominalPower": {
+                                "value": round(float(line_elem['s_nom']), 3),
+                                "uom": "kW" # uom to be checked
+                            },
                             "additionalInfo": line_elem['type_info'],
                         },
                     "geometry":
