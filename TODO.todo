@@ -1,6 +1,8 @@
 1) Provare ad adattare l'output di ding0 allo schema dell'utility network cityjson trovato -->
 --> Chiudere la pipeline (sul caso studio in Germania) --> cityjson ed MV-grid saranno due input diversi;
 2) Chiarire unità di misura;
+3) Chiarire quali elementi servono da mappare sul cityjson:
+se solo quelli associati ai bus corrispondenti a carichi residenziali o se la rete va mappata per intero;
 3) Fare diagramma grafico (su Drawio) della struttura del codice.
 
 COPIARE TUTTE LE MODIFICHE NELLA CARTELLA C:\Users\Utente\OneDrive - Politecnico di Torino\Laurea Magistrale\thesis_local_backup
