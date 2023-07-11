@@ -203,7 +203,7 @@ class UtilityNetworkADE:
                                 },
                                 "sNom": {
                                     "value": round(float(line_elem['s_nom']), 3),
-                                    "uom": "MW"  # uom to be checked
+                                    "uom": "MVA"  # uom to be checked
                                 },
                                 "additionalInfo": line_elem['type_info'],
                             },
