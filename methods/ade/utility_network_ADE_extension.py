@@ -136,92 +136,36 @@ class UtilityNetworkADE:
             self.un_dict.update(network)
 
         for b, bus_elem in buses_df.iterrows():
-            if bus_elem['name'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values:
-                x = bus_elem['x']
-                y = bus_elem['y']
-                z = bus_elem['z']
-                if bus_elem["in_building"]:
-                    nodeValue = "interior"
-                else:
-                    nodeValue = "exterior"
+            # if bus_elem['name'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values:
+            x = bus_elem['x']
+            y = bus_elem['y']
+            z = bus_elem['z']
+            if bus_elem["in_building"]:
+                nodeValue = "interior"
+            else:
+                nodeValue = "exterior"
 
-                bus = {
-                    f"{bus_elem['name']}": {
-                        {
-                            "type": "+Node",
-                            "attributes":
-                                {
-                                    "NodeValue": nodeValue,
-                                    "nominalVoltage": {
-                                        "value": round(float(bus_elem['v_nom']), 3),
-                                        "uom": "kV"  # uom to be checked
-                                    }
-                                },
-                            "geometry":
-                                [
-                                    {
-                                        "type": "MultiPoint",
-                                        "lod": "1",
-                                        "boundaries":
-                                            [
-                                                (x, y, z)
-                                                # to be transformed according to CityJSON specifications, with z coordinate to be added
-                                            ]
-                                    }
-                                ],
-                            "parents":
-                                [
-                                    "myFeatureGraph"
-                                ]
-                        }
-                    }
-                }
-                self.un_dict.update(bus)
-
-        for l, line_elem in lines_df.iterrows():
-            if line_elem['bus0'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values or line_elem[
-                'bus1'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values:
-                link = {
-                    f"{line_elem['name']}": {
-                        "type": "+InteriorFeatureLink",
+            bus = {
+                f"{bus_elem['name']}": {
+                    {
+                        "type": "+Node",
                         "attributes":
                             {
-                                "start": line_elem['bus0'],
-                                "end": line_elem['bus1'],
-                                "kind": line_elem['kind'],
-                                "lenght": {
-                                    "value": float(line_elem['lenght']),
-                                    "uom": "km"
-                                },
-                                "r": {
-                                    "value": float(line_elem['r']),
-                                    "uom": "Ω"  # uom to be checked
-                                },
-                                "x": {
-                                    "value": float(line_elem['x']),
-                                    "uom": "Ω"  # uom to be checked
-                                },
-                                "sNom": {
-                                    "value": round(float(line_elem['s_nom']), 3),
-                                    "uom": "MVA"  # uom to be checked
-                                },
-                                "additionalInfo": line_elem['type_info'],
+                                "NodeValue": nodeValue,
+                                "nominalVoltage": {
+                                    "value": round(float(bus_elem['v_nom']), 3),
+                                    "uom": "kV"  # uom to be checked
+                                }
                             },
                         "geometry":
                             [
                                 {
-                                    "type": "MultiLineString",
+                                    "type": "MultiPoint",
                                     "lod": "1",
                                     "boundaries":
                                         [
-                                            [
-                                                (buses_df[buses_df['name'] == line_elem['bus0']]['x'].values[0],
-                                                 buses_df[buses_df['name'] == line_elem['bus0']]['y'].values[0],
-                                                 buses_df[buses_df['name'] == line_elem['bus0']]['z'].values[0]),
-                                                (buses_df[buses_df['name'] == line_elem['bus1']]['x'].values[0],
-                                                 buses_df[buses_df['name'] == line_elem['bus1']]['y'].values[0],
-                                                 buses_df[buses_df['name'] == line_elem['bus1']]['z'].values[0])
-                                            ]
+                                            (x, y, z)
+                                            # to be transformed according to CityJSON specifications, with z coordinate to be added
                                         ]
                                 }
                             ],
@@ -231,52 +175,108 @@ class UtilityNetworkADE:
                             ]
                     }
                 }
-                self.un_dict.update(link)
+            }
+            self.un_dict.update(bus)
 
-        for ld, load_elem in loads_df.iterrows():
-            if load_elem['sector'] == 'residential':
-                load = {
-                    f"{bus_elem['name']}": {
-                        "type": "+AbstractNetworkFeature",
-                        "attributes":
-                            {
-                                "function": "disposal",
-                                "usage": "disposal",
-                                "bus": load_elem['bus'],
-                                "peakLoad": {
-                                    "value": round(float(load_elem['peak_load']), 3),
-                                    "uom": "MW"  # uom to be checked
-                                },
-                                "annualConsumption": {
-                                    "value": round(float(load_elem['annual_consumption']), 3),
-                                    "uom": "kWh"  # uom to be checked
-                                },
-                                "sector": load_elem['sector']
-                            }
-                    }
-                }
-                self.un_dict.update(load)
-
-        for g, gen_elem in generators_df.iterrows():
-            if gen_elem['bus'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values:
-                generator = {
-                    f"{gen_elem['name']}": {
-                        "type": "+AbstractNetworkFeature",
-                        "attributes": {
-                            "function": "supply",
-                            "usage": "supply",
-                            "bus": gen_elem['bus'],
-                            "control": gen_elem['control'],
-                            "pNom": {
-                                "value": float(gen_elem['p_nom']),
+        for l, line_elem in lines_df.iterrows():
+            # if line_elem['bus0'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values or line_elem[
+            #   'bus1'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values:
+            link = {
+                f"{line_elem['name']}": {
+                    "type": "+InteriorFeatureLink",
+                    "attributes":
+                        {
+                            "start": line_elem['bus0'],
+                            "end": line_elem['bus1'],
+                            "kind": line_elem['kind'],
+                            "lenght": {
+                                "value": float(line_elem['lenght']),
+                                "uom": "km"
+                            },
+                            "r": {
+                                "value": float(line_elem['r']),
+                                "uom": "Ω"  # uom to be checked
+                            },
+                            "x": {
+                                "value": float(line_elem['x']),
+                                "uom": "Ω"  # uom to be checked
+                            },
+                            "sNom": {
+                                "value": round(float(line_elem['s_nom']), 3),
                                 "uom": "MVA"  # uom to be checked
                             },
-                            "type": gen_elem['type'],
-                            "subtype": gen_elem['subtype'],
-                            "weatherCellId": gen_elem['weather_cell_id'],
+                            "additionalInfo": line_elem['type_info'],
+                        },
+                    "geometry":
+                        [
+                            {
+                                "type": "MultiLineString",
+                                "lod": "1",
+                                "boundaries":
+                                    [
+                                        [
+                                            (buses_df[buses_df['name'] == line_elem['bus0']]['x'].values[0],
+                                             buses_df[buses_df['name'] == line_elem['bus0']]['y'].values[0],
+                                             buses_df[buses_df['name'] == line_elem['bus0']]['z'].values[0]),
+                                            (buses_df[buses_df['name'] == line_elem['bus1']]['x'].values[0],
+                                             buses_df[buses_df['name'] == line_elem['bus1']]['y'].values[0],
+                                             buses_df[buses_df['name'] == line_elem['bus1']]['z'].values[0])
+                                        ]
+                                    ]
+                            }
+                        ],
+                    "parents":
+                        [
+                            "myFeatureGraph"
+                        ]
+                }
+            }
+            self.un_dict.update(link)
+
+        for ld, load_elem in loads_df.iterrows():
+            # if load_elem['sector'] == 'residential':
+            load = {
+                f"{bus_elem['name']}": {
+                    "type": "+AbstractNetworkFeature",
+                    "attributes":
+                        {
+                            "function": "disposal",
+                            "usage": "disposal",
+                            "bus": load_elem['bus'],
+                            "peakLoad": {
+                                "value": round(float(load_elem['peak_load']), 3),
+                                "uom": "MW"  # uom to be checked
+                            },
+                            "annualConsumption": {
+                                "value": round(float(load_elem['annual_consumption']), 3),
+                                "uom": "kWh"  # uom to be checked
+                            },
+                            "sector": load_elem['sector']
                         }
+                }
+            }
+            self.un_dict.update(load)
+
+        for g, gen_elem in generators_df.iterrows():
+            # if gen_elem['bus'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values:
+            generator = {
+                f"{gen_elem['name']}": {
+                    "type": "+AbstractNetworkFeature",
+                    "attributes": {
+                        "function": "supply",
+                        "usage": "supply",
+                        "bus": gen_elem['bus'],
+                        "control": gen_elem['control'],
+                        "pNom": {
+                            "value": float(gen_elem['p_nom']),
+                            "uom": "MVA"  # uom to be checked
+                        },
+                        "type": gen_elem['type'],
+                        "subtype": gen_elem['subtype'],
+                        "weatherCellId": gen_elem['weather_cell_id'],
                     }
                 }
-                self.un_dict.update(generator)
+            }
+            self.un_dict.update(generator)
 
         return self.un_dict
