@@ -9,5 +9,8 @@ In the file "config/ding0_config.json", the user must respectively put:
     https://openenergy-platform.org/dataedit/view/grid/ego_dp_mv_griddistrict?view=268
     After having filtered data according to:
     - version --> v0.4.5
+    
+    For that purpose, the code has been written for loading ONE MV NETWORK AT ONCE. 
+    If multiple networks loading is required, the user is asked to modify the code for mapping the network to the output cityjson so that to be compliant with the output of multiple networks loading.
 2) Once chosen the MV_district, the user is required to also put the geometry of the multipolygon the considered MV_district is built over, by copying and pasting the value corresponding to the field "geom".
 It corresponds to a long exa-decimal string which represents a compressed form of the boundaries of the district. 

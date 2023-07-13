@@ -1,9 +1,10 @@
 TODO PER UPDATE 25/07:
-1) Documentare Energy e Utility Network extensions;
-2) Creare una relazione tra buildings e loads (sostituire nomi dei loads con id dei buildings in modo randomico).
+1) Filtrare i dati (buses e dati collegati a essi) prendendo solo quelli che si trovano dentro il bounding box specificato;
+2) Documentare Energy e Utility Network extensions;
+3) Creare una relazione tra buildings e loads (sostituire nomi dei loads con id dei buildings in modo randomico).
 Il mapping deve essere 1:n (load:buildings) e la rete di utilità non deve prendere in considerazione la tipologia di carico (neglet sector);
-3) Plottare Utility Network;
-4) Chiudere la pipeline;
+4) Plottare Utility Network;
+5) Chiudere la pipeline;
 
 5) Fare diagramma grafico (su Drawio) della struttura del codice.
 
