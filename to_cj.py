@@ -2,6 +2,7 @@ import geopandas as gpd
 import json
 from methods.cj_converter import *
 from methods.ade.energy_ADE_extension import *
+from methods.ade.utility_network_ADE_extension import *
 
 with open("buildings/file_loader/config/config.json", "r") as f:
     config_data = json.load(f)
@@ -40,6 +41,11 @@ ext_city_list = []
 energy_ADE_obj = EnergyADE(gdf)
 energy_ext = energy_ADE_obj.map_ext()
 ext_bld_list.append(energy_ext)
+
+path = 'utility/ding0-output/1249/*.csv'
+un_ADE = UtilityNetworkADE(path, crs, h_slm)
+utility_network_ext = un_ADE.map_ext()
+ext_city_list.append(utility_network_ext)
 
 cj_creator = CityJSONCreator(gdf)
 cj_creator.write_json(bbox, bounds, ades, ext_bld_list, ext_city_list, lod, crs, crs_url, UTM_zone, city, nation, building_target, nuts3, lau2)

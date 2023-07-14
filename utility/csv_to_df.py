@@ -3,7 +3,7 @@ import glob
 import os
 
 # Definisci il percorso dei file CSV
-percorso = 'ding0-output/1249/*.csv'
+percorso = 'ding0-output/759/*.csv'
 
 # Ottieni la lista di tutti i file CSV nel percorso specificato
 file_csv = glob.glob(percorso)

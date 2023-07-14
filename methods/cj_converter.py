@@ -262,6 +262,11 @@ class CityJSONCreator(JSON_Writer):
                 transl = self.cityjson_data["transform"]["translate"][i]
                 scal = self.cityjson_data["transform"]["scale"][i]
                 self.cityjson_data["vertices"][v][i] = round((vert - transl)/scal)
+
+        # add city objects extensions
+        for ext in ext_city:
+            self.cityjson_data["CityObjects"].update(ext)
+
         return self.cityjson_data
 
     def write_json(self, bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, building_target, nuts3, lau2):
