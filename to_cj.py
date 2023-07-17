@@ -29,6 +29,10 @@ with open("buildings/bounding_box.json", "r") as h:
     bbox_data = json.load(h)
 bbox = tuple(bbox_data["bounding_box_z"])
 
+with open("utility/config/ding0_config.json", "r") as j:
+    ding0_data = json.load(j)
+MV_district = str(ding0_data["MV_district"])
+
 gdf = gpd.read_file(f"buildings/output/{city}_{building_target}")
 # headers = list(gdf.columns)
 
@@ -42,7 +46,7 @@ energy_ADE_obj = EnergyADE(gdf)
 energy_ext = energy_ADE_obj.map_ext()
 ext_bld_list.append(energy_ext)
 
-path = 'utility/ding0-output/1249/*.csv'
+path = f"utility/ding0-output/{MV_district}/*.csv"
 un_ADE = UtilityNetworkADE(path, crs, h_slm)
 utility_network_ext = un_ADE.map_ext()
 ext_city_list.append(utility_network_ext)

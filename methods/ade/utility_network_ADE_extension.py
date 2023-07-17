@@ -15,21 +15,22 @@ class UtilityNetworkADE:
         self.path = path
         self.crs = crs
         self.h_slm = h_slm
+        self.dataframe_dict = {}
         self.un_dict = {}
 
     def load_csv(self):
         csv_file = glob.glob(self.path)
-        dataframe_dict = {}
         for file in csv_file:
             df = pd.read_csv(file)
             file_name = os.path.splitext(os.path.basename(file))[0]
-            dataframe_dict[file_name] = df
-        return dataframe_dict
+            self.dataframe_dict[file_name] = df
+        return self.dataframe_dict
 
     def check_crs(self):
-        dataframe_dict = self.load_csv()
-        network_df = dataframe_dict['network']
-        buses_df = dataframe_dict['buses']
+        self.dataframe_dict = self.load_csv()
+        network_df = self.dataframe_dict['network']
+        buses_df = self.dataframe_dict['buses']
+        buses_df = buses_df.dropna(subset=["x", "y"])
         network_df = network_df.rename(columns={'mv_grid_district_geom': 'geometry'})
         network_df['geometry'] = network_df['geometry'].apply(shapely.wkt.loads)
         network_gdf = gpd.GeoDataFrame(network_df, geometry='geometry')
@@ -46,10 +47,10 @@ class UtilityNetworkADE:
 
             buses_df['x'], buses_df['y'] = transformer.transform(buses_df['x'], buses_df['y'])
 
-            dataframe_dict['network'] = network_gdf
-            dataframe_dict['buses'] = buses_df
+        self.dataframe_dict['network'] = network_gdf
+        self.dataframe_dict['buses'] = buses_df
 
-        return dataframe_dict
+        return self.dataframe_dict
 
     def get_elevations(self, df, max_retry, delay):
         points = []
@@ -86,6 +87,8 @@ class UtilityNetworkADE:
         df['z'] = [self.h_slm] * len(points)
 
         df['geometry'] = df.apply(lambda row: Point(row['x'], row['y'], row['z']), axis=1)
+
+        df['geometry'] = df['geometry'].apply(shapely.wkt.loads)
 
         gdf = gpd.GeoDataFrame(df, geometry='geometry')
 
@@ -131,17 +134,18 @@ class UtilityNetworkADE:
         return gdf
 
     def map_ext(self):
-        dataframe_dict = self.check_crs()
+        self.dataframe_dict = self.check_crs()
 
-        network_gdf = dataframe_dict['network']
-        buses_df = dataframe_dict['buses']
+        network_gdf = self.dataframe_dict['network']
+        buses_df = self.dataframe_dict['buses']
+
         buses_gdf = self.get_elevations(buses_df, max_retry=10, delay=0.5)
-        lines_df = dataframe_dict['lines']
-        loads_df = dataframe_dict['loads']
-        generators_df = dataframe_dict['generators']
-        switches_df = dataframe_dict['switches']
-        transformers_df = dataframe_dict['transformers']
-        transformers_hvmv_df = dataframe_dict['transformers_hvmv']
+        lines_df = self.dataframe_dict['lines']
+        loads_df = self.dataframe_dict['loads']
+        generators_df = self.dataframe_dict['generators']
+        switches_df = self.dataframe_dict['switches']
+        transformers_df = self.dataframe_dict['transformers']
+        transformers_hvmv_df = self.dataframe_dict['transformers_hvmv']
 
         for n, network_elem in network_gdf.iterrows():
             network = {
@@ -167,10 +171,10 @@ class UtilityNetworkADE:
                     "type": "+FeatureGraph",
                     "attributes":
                         {
-                            "node": list(dataframe_dict['buses']['name']),
-                            "interiorFeatureLink": list(dataframe_dict['lines']['name'])
+                            "node": list(self.dataframe_dict['buses']['name']),
+                            "interiorFeatureLink": list(self.dataframe_dict['lines']['name'])
                         },
-                    "children": list(dataframe_dict['buses']['name']) + list(dataframe_dict['buses']['name'])
+                    "children": list(self.dataframe_dict['buses']['name']) + list(self.dataframe_dict['buses']['name'])
                 }
             }
 
