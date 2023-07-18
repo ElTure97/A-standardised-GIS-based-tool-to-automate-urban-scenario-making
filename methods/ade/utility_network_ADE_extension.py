@@ -6,7 +6,6 @@ import requests
 import shapely.wkt
 import time
 from pyproj import Transformer
-from shapely.geometry import Point
 
 
 class UtilityNetworkADE:
@@ -63,10 +62,19 @@ class UtilityNetworkADE:
 
         if request_size <= 1024:
             # GET API
-            return self.send_get_request(df, points, url, max_retry, delay)
+            df = self.send_get_request(df, points, url, max_retry, delay)
         else:
             # POST API
-            return self.send_post_request(df, points, max_retry, delay)
+            df = self.send_post_request(df, points, max_retry, delay)
+
+        df['geometry'] = [f"POINT ({row['x']} {row['y']} {row['z']})" for r, row in df.iterrows()]
+        df.drop(['x', 'y', 'z'], axis=1, inplace=True)
+        df['geometry'] = df['geometry'].apply(shapely.wkt.loads)
+        gdf = gpd.GeoDataFrame(df, geometry='geometry')
+
+        return gdf
+
+
 
     def send_get_request(self, df, points, url, max_retry, delay):
         retry_count = 0
@@ -86,13 +94,7 @@ class UtilityNetworkADE:
 
         df['z'] = [self.h_slm] * len(points)
 
-        df['geometry'] = df.apply(lambda row: Point(row['x'], row['y'], row['z']), axis=1)
-
-        df['geometry'] = df['geometry'].apply(shapely.wkt.loads)
-
-        gdf = gpd.GeoDataFrame(df, geometry='geometry')
-
-        return gdf
+        return df
 
     def send_post_request(self, df, points, max_retry, delay):
         url = "https://api.open-elevation.com/api/v1/lookup"
@@ -127,20 +129,16 @@ class UtilityNetworkADE:
         # Fill remaining missing values with default values
         df['z'].fillna(self.h_slm, inplace=True)
 
-        df['geometry'] = df.apply(lambda row: Point(row['x'], row['y'], row['z']), axis=1)
-
-        gdf = gpd.GeoDataFrame(df, geometry='geometry')
-
-        return gdf
+        return df
 
     def map_ext(self):
         self.dataframe_dict = self.check_crs()
 
         network_gdf = self.dataframe_dict['network']
         buses_df = self.dataframe_dict['buses']
-
         buses_gdf = self.get_elevations(buses_df, max_retry=10, delay=0.5)
         lines_df = self.dataframe_dict['lines']
+        lines_df = lines_df[lines_df['bus0'].isin(buses_gdf['name']) & lines_df['bus1'].isin(buses_gdf['name'])]
         loads_df = self.dataframe_dict['loads']
         generators_df = self.dataframe_dict['generators']
         switches_df = self.dataframe_dict['switches']
@@ -171,10 +169,10 @@ class UtilityNetworkADE:
                     "type": "+FeatureGraph",
                     "attributes":
                         {
-                            "node": list(self.dataframe_dict['buses']['name']),
-                            "interiorFeatureLink": list(self.dataframe_dict['lines']['name'])
+                            "node": list(buses_gdf['name']),
+                            "interiorFeatureLink": list(lines_df['name'])
                         },
-                    "children": list(self.dataframe_dict['buses']['name']) + list(self.dataframe_dict['buses']['name'])
+                    "children": list(buses_gdf['name']) + list(lines_df['name'])
                 }
             }
 
@@ -188,8 +186,7 @@ class UtilityNetworkADE:
                     nodeValue = "exterior"
 
                 bus = {
-                    f"{bus_elem['name']}": {
-                        {
+                    bus_elem['name']: {
                             "type": "+Node",
                             "attributes":
                                 {
@@ -217,30 +214,29 @@ class UtilityNetworkADE:
                                 ]
                         }
                     }
-                }
                 self.un_dict.update(bus)
 
             for l, line_elem in lines_df.iterrows():
                 if line_elem['bus0'] in buses_gdf['name'].values and line_elem['bus1'] in buses_gdf['name'].values:
                     link = {
-                        f"{line_elem['name']}": {
+                        line_elem['name'] : {
                             "type": "+InteriorFeatureLink",
                             "attributes":
                                 {
                                     "start": line_elem['bus0'],
                                     "end": line_elem['bus1'],
                                     "kind": line_elem['kind'],
-                                    "lenght": {
-                                        "value": float(line_elem['lenght']),
+                                    "length": {
+                                        "value": float(line_elem['length']),
                                         "uom": "km"
                                     },
                                     "r": {
                                         "value": float(line_elem['r']),
-                                        "uom": "Ω"  # uom to be checked
+                                        "uom": "ohm"  # uom to be checked
                                     },
                                     "x": {
                                         "value": float(line_elem['x']),
-                                        "uom": "Ω"  # uom to be checked
+                                        "uom": "ohm"  # uom to be checked
                                     },
                                     "sNom": {
                                         "value": round(float(line_elem['s_nom']), 3),
@@ -256,8 +252,8 @@ class UtilityNetworkADE:
                                         "boundaries":
                                             [
                                                 [
-                                                    buses_gdf[buses_gdf['name'] == line_elem['bus0']]['geometry'].coords[0],
-                                                    buses_gdf[buses_gdf['name'] == line_elem['bus1']]['geometry'].coords[0],
+                                                    buses_gdf[buses_gdf['name'] == line_elem['bus0']]['geometry'].iloc[0].coords[0],
+                                                    buses_gdf[buses_gdf['name'] == line_elem['bus1']]['geometry'].iloc[0].coords[0],
                                                 ]
                                             ]
                                     }
@@ -273,7 +269,7 @@ class UtilityNetworkADE:
             for ld, load_elem in loads_df.iterrows():
                 if load_elem['bus'] in buses_gdf['name'].values:
                     load = {
-                        f"{load_elem['name']}": {
+                        load_elem['name']: {
                             "type": "+AbstractNetworkFeature",
                             "attributes":
                                 {
@@ -297,7 +293,7 @@ class UtilityNetworkADE:
             for g, gen_elem in generators_df.iterrows():
                 if gen_elem['bus'] in buses_gdf['name'].values:
                     generator = {
-                        f"{gen_elem['name']}": {
+                        gen_elem['name']: {
                             "type": "+AbstractNetworkFeature",
                             "attributes": {
                                 "function": "supply",
@@ -319,7 +315,7 @@ class UtilityNetworkADE:
             for s, switch_elem in switches_df.iterrows():
                 if switch_elem['bus_closed'] in buses_gdf['name'].values and switch_elem['bus_open'] in buses_gdf['name'].values:
                     switch = {
-                        f"{switch_elem['name']}": {
+                        switch_elem['name']: {
                             "type": "+AbstractNetworkFeature",
                             "attributes": {
                                 "busClosed": switch_elem['bus_closed'],
@@ -334,18 +330,18 @@ class UtilityNetworkADE:
             for tr, transform_elem in transformers_df.iterrows():
                 if transform_elem['bus0'] in buses_gdf['name'].values and transform_elem['bus1'] in buses_gdf['name'].values:
                     transformer = {
-                        f"{transform_elem['name']}": {
+                        transform_elem['name']: {
                             "type": "+AbstractNetworkFeature",
                             "attributes": {
                                 "sourceBus": transform_elem['bus0'],
                                 "endBus": transform_elem['bus1'],
                                 "r": {
                                     "value": float(transform_elem['r']),
-                                    "uom": "Ω"  # uom to be checked
+                                    "uom": "ohm"  # uom to be checked
                                 },
                                 "x": {
                                     "value": float(transform_elem['x']),
-                                    "uom": "Ω"  # uom to be checked
+                                    "uom": "ohm"  # uom to be checked
                                 },
                                 "sNom": {
                                     "value": round(float(transform_elem['s_nom']), 3),
@@ -360,7 +356,7 @@ class UtilityNetworkADE:
             for trHVMV, transform_hvmv_elem in transformers_hvmv_df.iterrows():
                 if transform_hvmv_elem['bus1'] in buses_gdf['name'].values:
                     transformer_hvmv = {
-                        f"{transform_hvmv_elem['name']}": {
+                        transform_hvmv_elem['name']: {
                             "type": "+AbstractNetworkFeature",
                             "attributes": {
                                 "type": transform_hvmv_elem['type'],

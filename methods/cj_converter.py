@@ -255,6 +255,28 @@ class CityJSONCreator(JSON_Writer):
         }
 
         self.cityjson_data["metadata"] = metadata_dict
+
+        # add city objects extensions
+        for ext in ext_city:
+            self.cityjson_data["CityObjects"].update(ext)
+            # part of the code to transform city objects coordinates in order to make them compliant with the cityjson specifications
+            for key, value in ext.items():
+                if 'geometry' in value:
+                    geom = value['geometry'][0]
+                    if geom["type"] == "MultiPoint":  # buses
+                        if geom["boundaries"][0] not in self.cityjson_data:
+                            self.cityjson_data["vertices"].append(geom["boundaries"][0])
+                        geom["boundaries"][0] = self.cityjson_data["vertices"].index(geom["boundaries"][0])
+                    elif geom["type"] == "MultiLineString":  # lines
+                        for b in range(len(geom["boundaries"][0])):
+                            if b not in self.cityjson_data:
+                                self.cityjson_data["vertices"].append(geom["boundaries"][0][b])
+                            geom["boundaries"][0][b] = self.cityjson_data["vertices"].index(geom["boundaries"][0][b])
+                    else:
+                        # to be defined what it should be done in case of different objects geometry type
+                        pass
+
+
         for v in range(len(self.cityjson_data["vertices"])):
             self.cityjson_data["vertices"][v] = list(self.cityjson_data["vertices"][v])
             for i in range(len(self.cityjson_data["vertices"][v])):
@@ -262,10 +284,6 @@ class CityJSONCreator(JSON_Writer):
                 transl = self.cityjson_data["transform"]["translate"][i]
                 scal = self.cityjson_data["transform"]["scale"][i]
                 self.cityjson_data["vertices"][v][i] = round((vert - transl)/scal)
-
-        # add city objects extensions
-        for ext in ext_city:
-            self.cityjson_data["CityObjects"].update(ext)
 
         return self.cityjson_data
 
