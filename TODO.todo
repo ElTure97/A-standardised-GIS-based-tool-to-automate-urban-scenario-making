@@ -1,11 +1,12 @@
 TODO PER UPDATE 25/07:
-1) Filtrare i dati (buses e dati collegati a essi) prendendo solo quelli che si trovano dentro il bounding box specificato;
-2) Documentare Energy e Utility Network extensions;
-3) Creare una relazione tra buildings e loads (sostituire nomi dei loads con id dei buildings in modo randomico).
-Il mapping deve essere 1:n (load:buildings) e la rete di utilità non deve prendere in considerazione la tipologia di carico (neglet sector);
-4) Plottare Utility Network;
-5) Chiudere la pipeline;
+1) Adattare Energy ADE alle specifiche dell'UML;
+2) Inviare cityJSON con solo l'Energy ADE;
+3) Verificare validità dell'utility network extension;
+4) Mappare rete di distribuzione Torino e creare relazione bus:buildings (1:n) (Attendere news da Pietro);
+5) Sostituire eventualmente le coordinate dei nodi di distribuzione con coordinate fittizie all'interno del bounding box;
+6) Plottare Utility Network;
+7) Documentare Energy e Utility Network extensions.
 
-5) Fare diagramma grafico (su Drawio) della struttura del codice.
+8) Fare diagramma grafico (su Drawio) della struttura del codice.
 
 COPIARE TUTTE LE MODIFICHE NELLA CARTELLA C:\Users\Utente\OneDrive - Politecnico di Torino\Laurea Magistrale\thesis_local_backup
