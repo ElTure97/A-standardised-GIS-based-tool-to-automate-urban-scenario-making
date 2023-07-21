@@ -23,15 +23,18 @@ class EnergyADE:
             "+energy-constructionWeight": constr_weight,
             "+energy-volume": [{
                 "energy-type": "grossVolume",
-                "energy-value":  round((float(bld_elem[self.headers[5]]) * float(bld_elem[self.headers[0]])), 2)
+                "energy-value":  round((float(bld_elem[self.headers[5]]) * float(bld_elem[self.headers[0]])), 2),
+                "uom": "m3"
             }],
             "+energy-floorArea": [{
                 "energy-type": "grossFloorArea",
-                "energy-value": float(bld_elem[self.headers[5]])
+                "energy-value": float(bld_elem[self.headers[5]]),
+                "uom": "m2"
             }],
             "+energy-heightAboveGround": [{
                 "energy-heightReference": "generalEave",
-                "energy-value": float(bld_elem[self.headers[0]])
+                "energy-value": float(bld_elem[self.headers[0]]),
+                "uom": "m"
             }],
             "+energy-weatherData": [{
                 "energy-weatherElement": "airTemperature",

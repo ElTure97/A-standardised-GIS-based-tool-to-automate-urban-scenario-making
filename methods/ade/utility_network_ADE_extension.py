@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 import glob
 import os
 import requests
@@ -305,8 +306,7 @@ class UtilityNetworkADE:
                                     "uom": "MVA"  # uom to be checked
                                 },
                                 "type": gen_elem['type'],
-                                "subtype": gen_elem['subtype'],
-                                "weatherCellId": gen_elem['weather_cell_id'],
+                                "subtype": gen_elem['subtype']
                             }
                         }
                     }
@@ -371,5 +371,16 @@ class UtilityNetworkADE:
                         }
                     }
                     self.un_dict.update(transformer_hvmv)
+
+        for key, inner_dict in self.un_dict.items():
+             for inner_key, dict_value in inner_dict.items():
+                if isinstance(dict_value, dict):
+                    for inner_inner_key, inner_inner_value in dict_value.items():
+                        if inner_inner_value == "nan" or inner_inner_value == "NaN" or inner_inner_value == "Nan" or inner_inner_value is None:
+                            dict_value[inner_inner_key] = "data not available"
+                else:
+                    if dict_value == "nan" or dict_value == "NaN" or dict_value == "Nan" or dict_value is None:
+                        inner_dict[inner_key] = "data not available"
+
 
         return self.un_dict

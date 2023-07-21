@@ -50,6 +50,7 @@ path = f"utility/ding0-output/{MV_district}/*.csv"
 un_ADE = UtilityNetworkADE(path, crs, h_slm)
 utility_network_ext = un_ADE.map_ext()
 ext_city_list.append(utility_network_ext)
+# ades.pop(-1)
 
 cj_creator = CityJSONCreator(gdf)
 cj_creator.write_json(bbox, bounds, ades, ext_bld_list, ext_city_list, lod, crs, crs_url, UTM_zone, city, nation, building_target, nuts3, lau2)
