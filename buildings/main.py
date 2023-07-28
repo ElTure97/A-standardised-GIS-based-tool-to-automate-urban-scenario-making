@@ -39,6 +39,8 @@ no_floors_columns = pro_config_data["floors"]["building_floors_no_columns"]
 floor_height = pro_config_data["floors"]["single_floor_height"]
 population_columns = pro_config_data["population_columns"]
 z_score_thresh = pro_config_data["z_score_threshold"]
+cooling_prob = pro_config_data["cooling_system_probability"]
+heating_prob = pro_config_data["heating_system_probability"]
 
 with open("config/tabula_config.json", "r") as e:
     tabula_data = json.load(e)
@@ -72,7 +74,7 @@ print(f"Numero di potenziali edifici a uso residenziale trovati: {bld}")
 print(f"Numero di edifici a uso residenziale censiti: {cens}")
 
 filled_gdfs_obj = DataFiller(gdfs, sez_det_df)
-gdfs_filled = filled_gdfs_obj.fill_missing_data(required_columns, id_field, building_age_columns, no_floors_columns, floor_height)
+gdfs_filled = filled_gdfs_obj.fill_missing_data(required_columns, id_field, building_age_columns, no_floors_columns, floor_height, cooling_prob, heating_prob)
 
 def_gdfs_obj = BuildingTypeClassifier(gdfs_filled, sez_det_df)
 gdfs_def = def_gdfs_obj.classify_building(required_columns, id_field, population_columns, building_target, filtering_values)

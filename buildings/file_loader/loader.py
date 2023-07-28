@@ -51,7 +51,7 @@ shp2gdf = SHP2GeoDF(shapefile_path, bbox, crs)
 shp_gdf = shp2gdf.get_gdf_from_shp()
 
 # check for consistency and store altitude coordinates (if available) for further processing
-checker_osm =ConsistencyChecker(osm_gdf, crs)
+checker_osm = ConsistencyChecker(osm_gdf, crs)
 osm_gdf, osm_z = checker_osm.check_consistency()
 osm_gdf.to_pickle('output/osm.pkl') # save
 

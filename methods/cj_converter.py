@@ -188,7 +188,7 @@ class CityJSONCreator(JSON_Writer):
             building = {
                 "type": "Building",
                 "attributes": {
-                    "name": f"building-{index + 1}",
+                    "name": f"building{index + 1}",
                     "censusSection": int(row[self.headers[9]]),
                     # "measuredHeight": float(row[self.headers[0]]),
                     "yearOfConstruction": int(row[self.headers[1]]),

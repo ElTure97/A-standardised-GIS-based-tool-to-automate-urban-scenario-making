@@ -4,6 +4,7 @@ class EnergyADE:
         self.gdf = gdf
         self.headers = list(self.gdf.columns)
         self.energy_ext = []
+        self.energy_dict = {}
 
     def map_ext(self):
         for idx, bld_elem in self.gdf.iterrows():
@@ -61,5 +62,22 @@ class EnergyADE:
             }
 
             self.energy_ext.append(energy)
+
+            thermal_zone = {
+                f"thermalZone{idx + 1}": {
+                    "type": "+Energy-ThermalZone",
+                    "attributes": {
+                        "energy-floorArea": [
+                            {
+                                "energy-value": bld_elem[self.headers[4]],
+                                "energy-uom": "m2"
+                            }
+                        ],
+                        "energy-infiltrationRate": float(bld_elem[self.headers[12]]),
+                        "energy-isCooled": bool(bld_elem[self.headers[13]]),
+                        "energy-isHeated": bool(bld_elem[self.headers[14]])
+                    }
+                }
+            }
 
         return self.energy_ext

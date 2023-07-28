@@ -25,5 +25,7 @@
     "E4": "non residential"
   },
   "population_columns": ["PF1", "P1"],
-  "z_score_threshold": [1, 0.75]
+  "z_score_threshold": [1, 0.75],
+  "cooling_system_probability": [0.25, 0.75],
+  "heating_system_probability": [0.95, 0.05]
 }

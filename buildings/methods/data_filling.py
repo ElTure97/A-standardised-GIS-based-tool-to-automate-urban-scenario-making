@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import random
 import statistics
 from scipy import stats
 
@@ -121,6 +122,18 @@ class DataFiller:
             df[columns[10]] = int(i)
         return self.gdfs
 
+    def fill_infiltration_rate(self, columns):
+        for i, df in self.gdfs.items():
+            df[columns[13]] = df[columns[13]].fillna(round(random.uniform(0.5, 2), 2))
+
+    def fill_cooling_system(self, columns, cooling_prob):
+        for i, df in self.gdfs.items():
+            df[columns[14]] = df[columns[14]].fillna(random.choices([True, False], weights= cooling_prob, k=1)[0])
+
+    def fill_heating_system(self, columns, heating_prob):
+        for i, df in self.gdfs.items():
+            df[columns[15]] = df[columns[15]].fillna(random.choices([True, False], weights= heating_prob, k=1)[0])
+
     def check_consistency(self, columns, floor_height):
         for i, df in self.gdfs.items():
             for idx, no_of_floors in enumerate(df[columns[4]]):
@@ -130,12 +143,15 @@ class DataFiller:
         return self.gdfs
 
 
-    def fill_missing_data(self, columns, sez_id, age_columns, floor_columns, floor_height):
+    def fill_missing_data(self, columns, sez_id, age_columns, floor_columns, floor_height, cooling_prob, heating_prob):
         self.gdfs = self.fill_age(columns, sez_id, age_columns)
         self.gdfs = self.fill_missing_height(columns, sez_id, floor_columns, floor_height)
         self.gdfs = self.fill_use_destination(columns)
         self.gdfs = self.fill_sez_cens(columns)
         self.gdfs = self.fill_no_of_floors(columns, sez_id, floor_columns, floor_height)
+        self.gdfs = self.fill_infiltration_rate(columns)
+        self.gdfs = self.fill_cooling_system(columns, cooling_prob)
+        self.gdfs = self.fill_heating_system(columns, heating_prob)
         gdfs = self.check_consistency(columns, floor_height)
 
         return gdfs

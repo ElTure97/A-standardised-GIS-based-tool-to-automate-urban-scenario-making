@@ -22,8 +22,11 @@ You are asked to put the LAU2 as a string consisting of 6 digits. In case of mis
 It is strongly suggested to use this application for one target a time and merge at the end different output datasets.
 If simultaneous different building targets data managing is needed, the code require some adaptation to cope it.
 9) Give as a list the fields you need for your application. 
-Geometry, height, age, use destination, number of floors, area, gross floor area, building type, no. of families, no. of people per building, building sezione di censimento number, tabula building type identifier and POD UID (randomly generated), must be respectively the 1st, the 2nd, the 3rd, the 4th, the 5th, the 6th, the 7th, the 8th, the 9th, the 10th, the 11th, the 12th and the 13th element of the list. 
-In such way, the application is allowed to correctly work by retrieving them using indices 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 12.
+Geometry, height, age, use destination, number of floors, area, gross floor area, building type, no. of families, no. of people per building, building census section number, 
+tabula building type identifier, POD UID (randomly generated if not available), building infiltration rate (random generated in range [0,1] if not available), 
+cooling system (boolean value randomly generated if not available) and heating system (boolean value randomly generated too if not available), must be respectively the 
+1st, the 2nd, the 3rd, the 4th, the 5th, the 6th, the 7th, the 8th, the 9th, the 10th, the 11th, the 12th, the 13th, the 14th, the 15th and the 16th element of the list. 
+In such way, the application is allowed to correctly work by retrieving them by exploiting list indices instead of headers name.
 Additional features would require additional modules and then code adaptation;
 10) Specify the input files path; 
 11) Give as a list the fields of your interest after having read the metadata file, to properly filter the csv containing detailed data about buildings inside that area. 

@@ -23,7 +23,13 @@ This is a MANDATORY step to correctly configure the instance.
 Total number of families column name must be the 1st element of the list in order to be retrieved by using index 0.
 Instead, total number of people column name must be the 2nd element of the list in order to be retrieved by using index 1.
 If additional columns are chosen to be used for further processing purposes, the code requires to be adapted;
-5) zscore threshold values as a list according to which buildings will be filtered (to respectively drop buildings too short and with too small gross floor area).
+5) zscore threshold values as a list according to which buildings will be filtered (to respectively drop buildings too short and with too small gross floor area);
+6) Cooling system probability intended as the probability that according to the study case location, building are cooled or not.
+That probability must be put as a list of TWO values, where:
+- the first one is the probability that a given building is cooled;
+- the second one is the probability that a given building is not cooled.
+It is then mandatory that, since those two values represent the parameters of a probability distribution, they must be set such that their summation must be equal to 1;
+7) Heating system probability in the same way as for cooling system probability. 
 
 Please notice that the database might consist of not totally reliable data especially about population and families per building, since stochastic methods building gross floor area based for values assignation have been employed.
 No economic and social factors have been taken into account for achieving that estimate.
