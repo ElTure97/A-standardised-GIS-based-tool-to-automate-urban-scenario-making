@@ -1,0 +1,20 @@
+{
+  "distribution_parameters": {
+    "expected_value": {
+      "january": 3,
+      "february": 7,
+      "march": 11,
+      "april": 15,
+      "may": 20,
+      "june": 25,
+      "july": 30,
+      "august": 26,
+      "september": 22,
+      "october": 17,
+      "november": 11,
+      "december": 5
+    },
+  "std_deviation": 2
+  },
+  "weather_file_path": "config/temperature_data.csv"
+}

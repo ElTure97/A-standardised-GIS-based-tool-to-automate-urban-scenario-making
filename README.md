@@ -30,3 +30,14 @@ For sloped city, it is, then, strongly suggested to integrate additional modules
 
 Additional modules for further ADEs must be added into the folder methods/ade. 
 Additional ADEs modules would require to be imported into the script to_cj.py.
+
+In the same folder, another configuration file is there. 
+It is needed for running the "weather_data_generator.py" script, in case of not available weather data.
+That script outputs a csv file containing a daily record for a year ONLY referred to air temperature.
+The user is required to put the average temperature associated with each month and the standard deviation both as float or integer values, expressed in degrees.
+Those values will be the parameters of the gaussian distributions exploited for generating sample temperature data.
+
+In the same file, also the path for retrieving weather data must be specified. 
+
+Pay attention to the fact that the code has been developed to deal with same-structured weather data as before, then,
+in case of different input weather data, some code adaptations might be needed.

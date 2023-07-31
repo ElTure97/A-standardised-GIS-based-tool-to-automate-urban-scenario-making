@@ -7,7 +7,5 @@ Mappare BuildingPhysics, EnergySystem, Material e Occupants o sottoforma di extr
 6) Sostituire eventualmente le coordinate dei nodi di distribuzione con coordinate fittizie all'interno del bounding box;
 7) Plottare Utility Network;
 8) Documentare Energy e Utility Network extensions;
-9) Creare riga di configurazione per weather data sottoforma di dizionario mese:temperatura_media_mensile.
-
 
 COPIARE TUTTE LE MODIFICHE NELLA CARTELLA C:\Users\Utente\OneDrive - Politecnico di Torino\Laurea Magistrale\thesis_local_backup
