@@ -41,6 +41,7 @@ population_columns = pro_config_data["population_columns"]
 z_score_thresh = pro_config_data["z_score_threshold"]
 cooling_prob = pro_config_data["cooling_system_probability"]
 heating_prob = pro_config_data["heating_system_probability"]
+en_demand_per_hh = pro_config_data["energy_demand_per_household"]
 
 with open("config/tabula_config.json", "r") as e:
     tabula_data = json.load(e)
@@ -77,7 +78,7 @@ filled_gdfs_obj = DataFiller(gdfs, sez_det_df)
 gdfs_filled = filled_gdfs_obj.fill_missing_data(required_columns, id_field, building_age_columns, no_floors_columns, floor_height, cooling_prob, heating_prob)
 
 def_gdfs_obj = BuildingTypeClassifier(gdfs_filled, sez_det_df)
-gdfs_def = def_gdfs_obj.classify_building(required_columns, id_field, population_columns, building_target, filtering_values)
+gdfs_def = def_gdfs_obj.classify_building(required_columns, id_field, population_columns, building_target, filtering_values, en_demand_per_hh)
 
 merged_gdf = pd.concat(gdfs_def.values(), ignore_index=True)
 

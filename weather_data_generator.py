@@ -1,6 +1,8 @@
 """This script creates a sample weather data collection if not previously provided"""
 import pandas as pd
 import random
+import numpy as np
+import math
 
 columns = ['temperature']
 days_in_a_year = 365
@@ -8,7 +10,7 @@ df = pd.DataFrame(index=range(days_in_a_year), columns=columns)
 
 j = 1
 
-std_dev = 1.5  # standard deviation in degrees
+std_dev = 2  # standard deviation in degrees
 
 for d in range(days_in_a_year):
     if j <= 31:  # jan

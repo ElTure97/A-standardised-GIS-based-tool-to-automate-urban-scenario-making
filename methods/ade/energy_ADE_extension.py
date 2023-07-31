@@ -6,7 +6,7 @@ class EnergyADE:
         self.energy_ext = []
         self.energy_dict = {}
 
-    def map_ext(self):
+    def map_ext(self, city):
         for idx, bld_elem in self.gdf.iterrows():
 
             no_of_floors = int(bld_elem[self.headers[3]])
@@ -49,14 +49,6 @@ class EnergyADE:
                 "energy-value": float(bld_elem[self.headers[0]]),
                 "energy-uom": "m"
             }],
-            "+energy-weatherData": [{
-                "energy-weatherElement": "airTemperature",
-                "energy-values": "temperatureData"
-            }],
-            "+energy-energyDemand": [{
-                "energy-energyAmount": "electricityData",
-                "energy-endUse": "spaceHeating"
-            }],
             "+energy-function": [bld_elem[self.headers[2]]],
             "+energy-referencePoint": None
             }
@@ -75,8 +67,22 @@ class EnergyADE:
                         ],
                         "energy-infiltrationRate": float(bld_elem[self.headers[12]]),
                         "energy-isCooled": bool(bld_elem[self.headers[13]]),
-                        "energy-isHeated": bool(bld_elem[self.headers[14]])
-                    }
+                        "energy-isHeated": bool(bld_elem[self.headers[14]]),
+                        "energy-weatherData": [
+                            {
+                                "energy-weatherElement": "airTemperature",
+                                "energy-values": f"temperatureData{city}"  # to be built
+                            }
+                        ],
+                        "energy-energyDemand": [
+                            {
+                                "energy-energyAmount": f"electricityDataBuilding{idx + 1}",  # to be built
+                                "energy-endUse": "spaceHeating"
+                            }
+                        ]
+                    },
+                    "parents": [f"building{idx + 1}"],
+                    "children": [f"usageZone{idx + 1}"]
                 }
             }
 

@@ -43,7 +43,7 @@ ext_city_list = []
 # further ADEs modules must be added here following the same syntax
 # pay attention to append the extension to the right list since according to that, the extension will be applied to buildings or city
 energy_ADE_obj = EnergyADE(gdf)
-energy_ext = energy_ADE_obj.map_ext()
+energy_ext = energy_ADE_obj.map_ext(city)
 ext_bld_list.append(energy_ext)
 
 path = f"utility/ding0-output/{MV_district}/*.csv"

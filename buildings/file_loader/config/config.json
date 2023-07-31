@@ -40,8 +40,9 @@
         "tabula",
         "POD",
         "infiltration_rate",
-        "is_cooled",
-        "is_heated"
+        "cooled",
+        "heated",
+        "building:demand"
     ],
     "shapefile": "study_case/Torino/shapefile",
     "DEM": {

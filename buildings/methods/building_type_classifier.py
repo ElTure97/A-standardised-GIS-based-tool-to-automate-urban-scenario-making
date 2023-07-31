@@ -8,7 +8,7 @@ class BuildingTypeClassifier:
         self.gdfs = gdfs
         self.sez_det_data = sez_det_data
 
-    def classify_building(self, columns, sez_id, pop_columns, building_target, filtering_values):
+    def classify_building(self, columns, sez_id, pop_columns, building_target, filtering_values, en_dem_per_hh):
         for i, df in self.gdfs.items():
             row = self.sez_det_data.loc[self.sez_det_data[sez_id[0]] == i]
             if row['E3'].iloc[0] != 0:
@@ -23,7 +23,7 @@ class BuildingTypeClassifier:
                 random.shuffle(family_uid_list)
             population = float(row[pop_columns[1]].iloc[0]) * corr_fact
 
-            def calculate_building_GFA(building): # gross floor area
+            def calculate_building_GFA(building):  # gross floor area
                 area = building[columns[5]]
                 levels = float(building[columns[4]])
                 if levels >= 1:
@@ -53,6 +53,16 @@ class BuildingTypeClassifier:
 
             df[columns[9]] = df.apply(calculate_building_no_of_people, axis=1)
 
+            def calculate_energy_demand(build_elem):
+                building_families = build_elem[columns[8]]
+                energy_demand = int(building_families * en_dem_per_hh)
+                return energy_demand
+
+            energy_mask = df[columns[16]].isna()
+
+            df.loc[energy_mask, columns[16]] = df[energy_mask].apply(calculate_energy_demand, axis=1)
+
+
             for idx, building_elem in enumerate(df[columns[3]]):
                 if building_elem not in filtering_values["not_specified"]:
                     if building_elem in filtering_values["AB"]:
@@ -73,6 +83,7 @@ class BuildingTypeClassifier:
                         else:
                             df[columns[7]].iloc[idx] = "MFH"
                 df[columns[3]].iloc[idx] = building_target
+
 
         return self.gdfs
 
