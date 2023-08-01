@@ -52,7 +52,7 @@ class EnergyADE:
             }],
             "+energy-energyDemand": [
                 {
-                    "energy-energyAmount": f"totalEnergyConsumptionBuilding{idx + 1}",  # to be built
+                    "energy-energyAmount": f"totalEnergyConsumptionBuilding{idx + 1}",
                     "energy-endUse": "otherOrCombination"
                 }
             ],
@@ -144,15 +144,18 @@ class EnergyADE:
                             "energy-endPeriod": energy_measurement_period["end_date"],
                         },
                         "energy-timeInterval": {
-                            "energy-value": ((datetime.strptime(energy_measurement_period["end_date"]) - datetime.strptime(energy_measurement_period["start_date"]))/365.25),
+                            "energy-value": round(((datetime.strptime(energy_measurement_period["end_date"]) - datetime.strptime(energy_measurement_period["start_date"]))/365.25), 1),
                             "energy-uom": "years"
                         },
                         "energy-values": [
-                            # energy value
-                        ]
+                            bld_elem[self.headers[15]]
+                        ],
+                        "energy-uom": "kWh"
                     }
                 }
             }
+
+            self.energy_dict.update(total_consumption)
 
 
 
