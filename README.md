@@ -20,7 +20,7 @@ Also, the required level of detail according to the specifications in https://3d
 and the link for the output crs which must be compliant to the following sample link used for UTM zone 32 crs:
 https://www.opengis.net/def/crs/EPSG/0/32632
 
-Eventually, the acquisition method through which energy consumption data have been achieved and the interpolation method must be put both as a string, 
+The user is also required to put the acquisition method through which energy consumption data have been achieved and the interpolation method both as a string, 
 strictly choosing one among the following methods and interpolation strategies respectively:
 
   "measurement";
@@ -42,6 +42,8 @@ strictly choosing one among the following methods and interpolation strategies r
   "minimumInSucceedingInterval";
   "precedingTotal";
   "succeedingTotal".
+
+Eventually, also the energy measurement period must be specified by putting the start date and the end date in the date format "YYYY-MM-DD".
 
 The code has been written for conversion to CityJSON v. 1.1. 
 If to a later or an older version conversion is needed, the code would require some adaptations in the module methods/cj_converter.py.

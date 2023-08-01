@@ -1,3 +1,4 @@
+from datetime import datetime
 class EnergyADE:
 
     def __init__(self, gdf):
@@ -6,7 +7,7 @@ class EnergyADE:
         self.energy_ext = []
         self.energy_dict = {}
 
-    def map_ext(self, city, energy_acquisition_method, energy_interpolation_method):
+    def map_ext(self, city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period):
         for idx, bld_elem in self.gdf.iterrows():
 
             no_of_floors = int(bld_elem[self.headers[3]])
@@ -139,9 +140,16 @@ class EnergyADE:
                         "energy-acquisitionMethod": energy_acquisition_method,
                         "energy-interpolationType": energy_interpolation_method,
                         "energy-temporalExtent": {
-                            "energy-startPeriod": 0,
-                            "energy-endPeriod": 0,
-                        }
+                            "energy-startPeriod": energy_measurement_period["start_date"],
+                            "energy-endPeriod": energy_measurement_period["end_date"],
+                        },
+                        "energy-timeInterval": {
+                            "energy-value": ((datetime.strptime(energy_measurement_period["end_date"]) - datetime.strptime(energy_measurement_period["start_date"]))/365.25),
+                            "energy-uom": "years"
+                        },
+                        "energy-values": [
+                            # energy value
+                        ]
                     }
                 }
             }

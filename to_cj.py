@@ -26,6 +26,7 @@ lod = cj_config_data["LoD"]
 crs_url = cj_config_data["crs_url"]
 energy_acquisition_method = cj_config_data["energy_acquisition_method"]
 energy_interpolation_method = cj_config_data["energy_interpolation_method"]
+energy_measurement_period = cj_config_data["energy_measurement_period"]
 
 with open("buildings/bounding_box.json", "r") as h:
     bbox_data = json.load(h)
@@ -45,7 +46,7 @@ ext_city_list = []
 # further ADEs modules must be added here following the same syntax
 # pay attention to append the extension to the right list since according to that, the extension will be applied to buildings or city
 energy_ADE_obj = EnergyADE(gdf)
-energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisition_method, energy_interpolation_method)
+energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period)
 ext_bld_list.append(energy_bld_ext)
 
 ding0_path = f"utility/ding0-output/{MV_district}/*.csv"
