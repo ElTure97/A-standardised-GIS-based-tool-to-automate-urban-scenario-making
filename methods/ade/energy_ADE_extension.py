@@ -6,7 +6,7 @@ class EnergyADE:
         self.energy_ext = []
         self.energy_dict = {}
 
-    def map_ext(self, city):
+    def map_ext(self, city, energy_acquisition_method, energy_interpolation_method):
         for idx, bld_elem in self.gdf.iterrows():
 
             no_of_floors = int(bld_elem[self.headers[3]])
@@ -49,7 +49,13 @@ class EnergyADE:
                 "energy-value": float(bld_elem[self.headers[0]]),
                 "energy-uom": "m"
             }],
-            "+energy-function": [bld_elem[self.headers[2]]],
+            "+energy-energyDemand": [
+                {
+                    "energy-energyAmount": f"totalEnergyConsumptionBuilding{idx + 1}",  # to be built
+                    "energy-endUse": "otherOrCombination"
+                }
+            ],
+            # "+energy-function": [bld_elem[self.headers[2]]],
             "+energy-referencePoint": None
             }
 
@@ -76,7 +82,15 @@ class EnergyADE:
                         ],
                         "energy-energyDemand": [
                             {
-                                "energy-energyAmount": f"electricityDataBuilding{idx + 1}",  # to be built
+                                "energy-energyAmount": f"electricityConsumptionBuilding{idx + 1}",  # to be built
+                                "energy-endUse": "electricalAppliances"
+                            },
+                            {
+                                "energy-energyAmount": f"coolingConsumptionBuilding{idx + 1}",  # to be built
+                                "energy-endUse": "spaceCooling"
+                            },
+                            {
+                                "energy-energyAmount": f"heatingConsumptionBuilding{idx + 1}",  # to be built
                                 "energy-endUse": "spaceHeating"
                             }
                         ]
@@ -86,4 +100,52 @@ class EnergyADE:
                 }
             }
 
-        return self.energy_ext
+            self.energy_dict.update(thermal_zone)
+
+            usage_zone = {
+                f"usageZone{idx + 1}": {
+                    "type": "+Energy-UsageZone",
+                    "attributes": {
+                        "energy-usageZoneType": [bld_elem[self.headers[2]]],
+                    },
+                    "energy-occupiedBy":
+                        [
+                            f"occupantsBuilding{idx + 1}"  # to be built
+                        ],
+                    "parents":
+                        [
+                            f"thermalZone{idx + 1}", f"building{idx + 1}"
+                        ]
+                }
+            }
+
+            self.energy_dict.update(usage_zone)
+
+            occupants = {
+                f"occupantsBuilding{idx + 1}": {
+                    "type": "+Energy-Occupants",
+                    "attributes": {
+                        "energy-occupancyRate": int(bld_elem[self.headers[8]])
+                    }
+                }
+            }
+
+            self.energy_dict.update(occupants)
+
+            total_consumption = {
+                f"totalEnergyConsumptionBuilding{idx + 1}": {
+                    "type": "+Energy-RegularTimeSeries",
+                    "attributes": {
+                        "energy-acquisitionMethod": energy_acquisition_method,
+                        "energy-interpolationType": energy_interpolation_method,
+                        "energy-temporalExtent": {
+                            "energy-startPeriod": 0,
+                            "energy-endPeriod": 0,
+                        }
+                    }
+                }
+            }
+
+
+
+        return self.energy_ext, self.energy_dict

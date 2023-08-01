@@ -28,5 +28,9 @@
   "z_score_threshold": [1, 0.75],
   "cooling_system_probability": [0.25, 0.75],
   "heating_system_probability": [0.95, 0.05],
-  "energy_demand_per_household": 2400
+  "energy_demand": {
+    "electricity": 2400,
+    "cooling": 180,
+    "heating": 14800
+  }
 }

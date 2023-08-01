@@ -2,7 +2,7 @@ import geopandas as gpd
 import json
 from methods.cj_converter import *
 from methods.ade.energy_ADE_extension import *
-from methods.ade.utility_network_ADE_extension import *
+from methods.ade.utility_network_ADE_extension_for_ding0 import *
 
 with open("buildings/file_loader/config/config.json", "r") as f:
     config_data = json.load(f)
@@ -24,6 +24,8 @@ with open("config/cityjson_config.json", "r") as g:
 ades = cj_config_data["extensions"]
 lod = cj_config_data["LoD"]
 crs_url = cj_config_data["crs_url"]
+energy_acquisition_method = cj_config_data["energy_acquisition_method"]
+energy_interpolation_method = cj_config_data["energy_interpolation_method"]
 
 with open("buildings/bounding_box.json", "r") as h:
     bbox_data = json.load(h)
@@ -43,12 +45,14 @@ ext_city_list = []
 # further ADEs modules must be added here following the same syntax
 # pay attention to append the extension to the right list since according to that, the extension will be applied to buildings or city
 energy_ADE_obj = EnergyADE(gdf)
-energy_ext = energy_ADE_obj.map_ext(city)
-ext_bld_list.append(energy_ext)
+energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisition_method, energy_interpolation_method)
+ext_bld_list.append(energy_bld_ext)
 
-path = f"utility/ding0-output/{MV_district}/*.csv"
-un_ADE = UtilityNetworkADE(path, crs, h_slm)
+ding0_path = f"utility/ding0-output/{MV_district}/*.csv"
+un_ADE = UtilityNetworkADE(ding0_path, crs, h_slm)
 utility_network_ext = un_ADE.map_ext()
+
+ext_city_list.append(energy_city_ext)
 ext_city_list.append(utility_network_ext)
 # ades.pop(-1)
 

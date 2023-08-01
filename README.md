@@ -16,8 +16,32 @@ The user is required to specify in the config/cityjson_config.json, the required
 }
 The extension file, if retrieved from a github public repository, requires to put as url the one for reaching the raw file.
 
-Also, the required level of detail according to the specifications in https://3d.bk.tudelft.nl/lod/ must be put as a string, and the link for the output crs which must be compliant to the following sample link used for UTM zone 32 crs:
+Also, the required level of detail according to the specifications in https://3d.bk.tudelft.nl/lod/ must be put as a string, 
+and the link for the output crs which must be compliant to the following sample link used for UTM zone 32 crs:
 https://www.opengis.net/def/crs/EPSG/0/32632
+
+Eventually, the acquisition method through which energy consumption data have been achieved and the interpolation method must be put both as a string, 
+strictly choosing one among the following methods and interpolation strategies respectively:
+
+  "measurement";
+  "simulation";
+  "calibratedSimulation";
+  "estimation";
+  "unknown".
+
+  "averageInPrecedingInterval";
+  "averageInSucceedingInterval";
+  "constantInPrecedingInterval";
+  "constantInSucceedingInterval";
+  "continuous";
+  "discontinuous";
+  "instantaneousTotal";
+  "maximumInPrecedingInterval";
+  "maximumInSucceedingInterval";
+  "minimumInPrecedingInterval";
+  "minimumInSucceedingInterval";
+  "precedingTotal";
+  "succeedingTotal".
 
 The code has been written for conversion to CityJSON v. 1.1. 
 If to a later or an older version conversion is needed, the code would require some adaptations in the module methods/cj_converter.py.
@@ -39,5 +63,5 @@ Those values will be the parameters of the gaussian distributions exploited for 
 
 In the same file, also the path for retrieving weather data must be specified. 
 
-Pay attention to the fact that the code has been developed to deal with same-structured weather data as before, then,
-in case of different input weather data, some code adaptations might be needed.
+Pay attention to the fact that the code has been developed to deal with same-structured weather data as before, independently on the kind of data (csv with just one column).
+In case of different input weather data, some code adaptations might be needed.

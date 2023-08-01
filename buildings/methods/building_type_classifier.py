@@ -54,8 +54,17 @@ class BuildingTypeClassifier:
             df[columns[9]] = df.apply(calculate_building_no_of_people, axis=1)
 
             def calculate_energy_demand(build_elem):
+                en_dem = 0
+                if build_elem[columns[14]] and build_elem[columns[15]]:
+                    en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["cooling"] + en_dem_per_hh["energy_demand"]["heating"]
+                elif build_elem[columns[14]] and not build_elem[columns[15]]:
+                    en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["cooling"]
+                elif not build_elem[columns[14]] and build_elem[columns[15]]:
+                    en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["heating"]
+                elif not build_elem[columns[14]] and not build_elem[columns[15]]:
+                    en_dem = en_dem_per_hh["energy_demand"]["electricity"]
                 building_families = build_elem[columns[8]]
-                energy_demand = int(building_families * en_dem_per_hh)
+                energy_demand = int(building_families * en_dem)
                 return energy_demand
 
             energy_mask = df[columns[16]].isna()

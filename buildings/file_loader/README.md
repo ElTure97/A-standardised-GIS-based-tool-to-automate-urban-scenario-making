@@ -45,6 +45,7 @@ geopy
 geopandas
 openpyxl
 osmnx
+pandapower
 pandas
 pyproj
 requests
