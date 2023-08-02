@@ -26,6 +26,6 @@
     },
   "std_deviation": 2
   },
-  "weather_file_path": "config/temperature_data.csv",
+  "weather_file_path": "weather_data/temperature_data.csv",
   "uom": "°C"
 }

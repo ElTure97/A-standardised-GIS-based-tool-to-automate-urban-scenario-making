@@ -138,7 +138,7 @@ class EnergyADE:
             self.energy_dict.update(occupants)
 
             delta_interval = datetime.strptime(energy_measurement_period["end_date"], "%Y-%m-%d") - datetime.strptime(energy_measurement_period["start_date"], "%Y-%m-%d")
-            time_interval = ((delta_interval.days + delta_interval.seconds / (60 * 60 * 24))/365)/len(bld_elem[self.headers[15]])
+            time_interval = ((delta_interval.days + delta_interval.seconds / (60 * 60 * 24))/365)
             no_of_years = round(time_interval, 1)
             no_of_months = round((time_interval * 12), 1)
             no_of_weeks = round((time_interval * 52), 1)
@@ -171,7 +171,7 @@ class EnergyADE:
                             "energy-value": time_interval,
                             "energy-uom": time_uom
                         },
-                        "energy-values": bld_elem[self.headers[15]],
+                        "energy-values": [bld_elem[self.headers[15]]],
                         "energy-uom": "kWh"
                     }
                 }
@@ -194,7 +194,7 @@ class EnergyADE:
                             "energy-value": time_interval,
                             "energy-uom": time_uom
                         },
-                        "energy-values": bld_elem[self.headers[16]],
+                        "energy-values": [bld_elem[self.headers[16]]],
                         "energy-uom": "kWh"
                     }
                 }
@@ -216,7 +216,7 @@ class EnergyADE:
                             "energy-value": time_interval,
                             "energy-uom": time_uom
                         },
-                        "energy-values": bld_elem[self.headers[17]],
+                        "energy-values": [bld_elem[self.headers[17]]],
                         "energy-uom": "kWh"
                     }
                 }
@@ -238,7 +238,7 @@ class EnergyADE:
                             "energy-value": time_interval,
                             "energy-uom": time_uom
                         },
-                        "energy-values": bld_elem[self.headers[18]],
+                        "energy-values": [bld_elem[self.headers[18]]],
                         "energy-uom": "kWh"
                     }
                 }
@@ -253,7 +253,7 @@ class EnergyADE:
         with open(weather_file_path, 'r') as file_csv:
             csv_reader = csv.reader(file_csv)
             for row in csv_reader:
-                value = row[measured_element]
+                value = row[0]
                 values_list.append(value)
 
         weather_acq_method = weather_config_data["weather_object_config"]["energy_acquisition_method"]

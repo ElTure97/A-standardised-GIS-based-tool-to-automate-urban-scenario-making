@@ -36,6 +36,10 @@ Please notice that the database might consist of not totally reliable data espec
 No economic and social factors have been taken into account for achieving that estimate.
 Moreover, only resident population data have been take into account.
 
+Instead, regarding energy demand data, for following processing purposes, those values have been kept as SINGLE VALUES. 
+The user is then responsible for guaranteeing that those associated each one to a different kind of energy demand, MUST BE AVERAGED 
+over the specified time resolution to get a single value at most.
+
 For data managing purposes, take into account that building no. of floors data are expressed as string, to be first converted into float or int if needed. 
 
 One more need configuration step, at this stage, is the one of filling fields in the file config/tabula_config.json after having read the .xlsm input file.

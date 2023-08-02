@@ -125,14 +125,17 @@ class DataFiller:
     def fill_infiltration_rate(self, columns):
         for i, df in self.gdfs.items():
             df[columns[13]] = df[columns[13]].fillna(round(random.uniform(0.5, 2), 2))
+        return self.gdfs
 
     def fill_cooling_system(self, columns, cooling_prob):
         for i, df in self.gdfs.items():
             df[columns[14]] = df[columns[14]].fillna(random.choices([True, False], weights= cooling_prob, k=1)[0])
+        return self.gdfs
 
     def fill_heating_system(self, columns, heating_prob):
         for i, df in self.gdfs.items():
             df[columns[15]] = df[columns[15]].fillna(random.choices([True, False], weights= heating_prob, k=1)[0])
+        return self.gdfs
 
     def check_consistency(self, columns, floor_height):
         for i, df in self.gdfs.items():

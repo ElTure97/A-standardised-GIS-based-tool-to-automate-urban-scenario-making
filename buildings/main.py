@@ -41,7 +41,7 @@ population_columns = pro_config_data["population_columns"]
 z_score_thresh = pro_config_data["z_score_threshold"]
 cooling_prob = pro_config_data["cooling_system_probability"]
 heating_prob = pro_config_data["heating_system_probability"]
-en_demand_per_hh = pro_config_data["energy_demand_per_household"]
+en_demand_per_hh = pro_config_data["energy_demand"]
 
 with open("config/tabula_config.json", "r") as e:
     tabula_data = json.load(e)

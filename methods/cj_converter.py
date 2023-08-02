@@ -108,7 +108,7 @@ class CityJSONCreator(JSON_Writer):
     def create_CJ(self, bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target):
         self.cityjson_data["vertices"] = []
         for index, row in self.gdf.iterrows():
-            geom = row[self.headers[12]]
+            geom = row[self.headers[19]]
             if isinstance(geom, Point):
                 continue
             elif isinstance(geom, Polygon):
@@ -145,9 +145,8 @@ class CityJSONCreator(JSON_Writer):
                     self.cityjson_data["vertices"] = self.cityjson_data["vertices"] + coords[poly]
                 geom_type = "CompositeSolid"
             else:
-                # to be defined what it should be done in case of different geometry type with respect to Point, Polygon or MultiPolygon
-                coords = None
-                geom_type = None
+                continue
+                 # to be defined what it should be done in case of different geometry type with respect to Point, Polygon or MultiPolygon
 
             bound = []
             if len(coords) == 1:
