@@ -6,7 +6,7 @@ import json
 
 with open("config/weather_config.json", "r") as f:
     weather_data = json.load(f)
-measured_element = weather_data["measured_element"]
+measured_element = weather_data["weather_object_config"]["measured_element"]
 mean_dict = weather_data["distribution_parameters"]["expected_value"]
 std_dev = weather_data["distribution_parameters"]["std_deviation"]
 
