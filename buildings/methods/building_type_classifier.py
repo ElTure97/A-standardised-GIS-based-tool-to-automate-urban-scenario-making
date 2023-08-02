@@ -53,35 +53,70 @@ class BuildingTypeClassifier:
 
             df[columns[9]] = df.apply(calculate_building_no_of_people, axis=1)
 
-            def calculate_energy_demand(build_elem):
-                en_dem = 0
-                if build_elem[columns[14]] and build_elem[columns[15]]:
-                    en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["cooling"] + en_dem_per_hh["energy_demand"]["heating"]
-                elif build_elem[columns[14]] and not build_elem[columns[15]]:
-                    en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["cooling"]
-                elif not build_elem[columns[14]] and build_elem[columns[15]]:
-                    en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["heating"]
-                elif not build_elem[columns[14]] and not build_elem[columns[15]]:
-                    en_dem = en_dem_per_hh["energy_demand"]["electricity"]
+            def calculate_electricity_energy_demand(bu_elem):
+                return int(en_dem_per_hh["energy_demand"]["electricity"])
+
+            ele_energy_mask = df[columns[17]].isna()
+
+            df.loc[ele_energy_mask, columns[17]] = df[ele_energy_mask].apply(calculate_electricity_energy_demand, axis=1)
+
+            df[columns[17]] = df[columns[17]].apply(lambda x: [x] if not isinstance(x, list) else x)
+
+            def calculate_cooling_energy_demand(bui_elem):
+                if bui_elem[columns[14]]:
+                    return int(en_dem_per_hh["energy_demand"]["cooling"])
+                else:
+                    return 0
+
+            cool_energy_mask = df[columns[18]].isna()
+
+            df.loc[cool_energy_mask, columns[18]] = df[cool_energy_mask].apply(calculate_cooling_energy_demand, axis=1)
+
+            df[columns[18]] = df[columns[18]].apply(lambda x: [x] if not isinstance(x, list) else x)
+
+            def calculate_heating_energy_demand(buil_elem):
+                if buil_elem[columns[15]]:
+                    return int(en_dem_per_hh["energy_demand"]["heating"])
+                else:
+                    return 0
+
+            heat_energy_mask = df[columns[19]].isna()
+
+            df.loc[heat_energy_mask, columns[19]] = df[heat_energy_mask].apply(calculate_heating_energy_demand, axis=1)
+
+            df[columns[19]] = df[columns[19]].apply(lambda x: [x] if not isinstance(x, list) else x)
+
+            def calculate_total_energy_demand(build_elem):
+                en_dem = build_elem[columns[17]] + build_elem[columns[18]] + build_elem[columns[19]]
+                # en_dem = 0
+                # if build_elem[columns[14]] and build_elem[columns[15]]:
+                #     en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["cooling"] + en_dem_per_hh["energy_demand"]["heating"]
+                # elif build_elem[columns[14]] and not build_elem[columns[15]]:
+                #     en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["cooling"]
+                # elif not build_elem[columns[14]] and build_elem[columns[15]]:
+                #     en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["heating"]
+                # elif not build_elem[columns[14]] and not build_elem[columns[15]]:
+                #     en_dem = en_dem_per_hh["energy_demand"]["electricity"]
                 building_families = build_elem[columns[8]]
                 energy_demand = int(building_families * en_dem)
                 return energy_demand
 
-            energy_mask = df[columns[16]].isna()
+            tot_energy_mask = df[columns[16]].isna()
 
-            df.loc[energy_mask, columns[16]] = df[energy_mask].apply(calculate_energy_demand, axis=1)
+            df.loc[tot_energy_mask, columns[16]] = df[tot_energy_mask].apply(calculate_total_energy_demand, axis=1)
 
+            df[columns[16]] = df[columns[16]].apply(lambda x: [x] if not isinstance(x, list) else x)
 
             for idx, building_elem in enumerate(df[columns[3]]):
                 if building_elem not in filtering_values["not_specified"]:
                     if building_elem in filtering_values["AB"]:
-                        df[columns[7]].iloc[idx] = "AB" # apartment block
+                        df[columns[7]].iloc[idx] = "AB"  # apartment block
                     elif building_elem in filtering_values["SFH"]:
-                        df[columns[7]].iloc[idx] = "SFH" # single family house
+                        df[columns[7]].iloc[idx] = "SFH"  # single family house
                     elif building_elem in filtering_values["MFH"]:
-                        df[columns[7]].iloc[idx] = "MFH"  # multifamily house
+                        df[columns[7]].iloc[idx] = "MFH"   # multifamily house
                     elif building_elem in filtering_values["TH"]:
-                        df[columns[7]].iloc[idx] = "TH" # terraced house
+                        df[columns[7]].iloc[idx] = "TH"  # terraced house
                 else:
                     no_of_floors = float(df[columns[4]].iloc[idx])
                     if no_of_floors >= 3:

@@ -1,3 +1,4 @@
+import csv
 from datetime import datetime
 class EnergyADE:
 
@@ -7,7 +8,7 @@ class EnergyADE:
         self.energy_ext = []
         self.energy_dict = {}
 
-    def map_ext(self, city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period):
+    def map_ext(self, city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data):
         for idx, bld_elem in self.gdf.iterrows():
 
             no_of_floors = int(bld_elem[self.headers[3]])
@@ -62,6 +63,9 @@ class EnergyADE:
 
             self.energy_ext.append(energy)
 
+            measured_element = weather_config_data["weather_object_config"]["measured_element"]
+            weather_element = weather_config_data["weather_object_config"]["weather_element"]
+
             thermal_zone = {
                 f"thermalZone{idx + 1}": {
                     "type": "+Energy-ThermalZone",
@@ -77,21 +81,21 @@ class EnergyADE:
                         "energy-isHeated": bool(bld_elem[self.headers[14]]),
                         "energy-weatherData": [
                             {
-                                "energy-weatherElement": "airTemperature",
-                                "energy-values": f"temperatureData{city}"  # to be built
+                                "energy-weatherElement": weather_element,
+                                "energy-values": f"{measured_element}Data{city}"  # to be built
                             }
                         ],
                         "energy-energyDemand": [
                             {
-                                "energy-energyAmount": f"electricityConsumptionBuilding{idx + 1}",  # to be built
+                                "energy-energyAmount": f"electricityConsumptionBuilding{idx + 1}",
                                 "energy-endUse": "electricalAppliances"
                             },
                             {
-                                "energy-energyAmount": f"coolingConsumptionBuilding{idx + 1}",  # to be built
+                                "energy-energyAmount": f"coolingConsumptionBuilding{idx + 1}",
                                 "energy-endUse": "spaceCooling"
                             },
                             {
-                                "energy-energyAmount": f"heatingConsumptionBuilding{idx + 1}",  # to be built
+                                "energy-energyAmount": f"heatingConsumptionBuilding{idx + 1}",
                                 "energy-endUse": "spaceHeating"
                             }
                         ]
@@ -111,7 +115,7 @@ class EnergyADE:
                     },
                     "energy-occupiedBy":
                         [
-                            f"occupantsBuilding{idx + 1}"  # to be built
+                            f"occupantsBuilding{idx + 1}"
                         ],
                     "parents":
                         [
@@ -126,12 +130,32 @@ class EnergyADE:
                 f"occupantsBuilding{idx + 1}": {
                     "type": "+Energy-Occupants",
                     "attributes": {
-                        "energy-occupancyRate": int(bld_elem[self.headers[8]])
+                        "energy-numberOfOccupants": int(bld_elem[self.headers[8]])
                     }
                 }
             }
 
             self.energy_dict.update(occupants)
+
+            delta_interval = datetime.strptime(energy_measurement_period["end_date"], "%Y-%m-%d") - datetime.strptime(energy_measurement_period["start_date"], "%Y-%m-%d")
+            time_interval = ((delta_interval.days + delta_interval.seconds / (60 * 60 * 24))/365)/len(bld_elem[self.headers[15]])
+            no_of_years = round(time_interval, 1)
+            no_of_months = round((time_interval * 12), 1)
+            no_of_weeks = round((time_interval * 52), 1)
+            no_of_days = round((time_interval * 365), 1)
+
+            if time_interval >= 1:
+                time_uom = "years"
+                time_interval = no_of_years
+            elif 1/12 <= time_interval < 1:
+                time_uom = "months"
+                time_interval = no_of_months
+            elif 1/52 <= time_interval < 1/12:
+                time_uom = "weeks"
+                time_interval = no_of_weeks
+            else:
+                time_uom = "days"
+                time_interval = no_of_days
 
             total_consumption = {
                 f"totalEnergyConsumptionBuilding{idx + 1}": {
@@ -144,12 +168,10 @@ class EnergyADE:
                             "energy-endPeriod": energy_measurement_period["end_date"],
                         },
                         "energy-timeInterval": {
-                            "energy-value": round(((datetime.strptime(energy_measurement_period["end_date"]) - datetime.strptime(energy_measurement_period["start_date"]))/365.25), 1),
-                            "energy-uom": "years"
+                            "energy-value": time_interval,
+                            "energy-uom": time_uom
                         },
-                        "energy-values": [
-                            bld_elem[self.headers[15]]
-                        ],
+                        "energy-values": bld_elem[self.headers[15]],
                         "energy-uom": "kWh"
                     }
                 }
@@ -158,5 +180,127 @@ class EnergyADE:
             self.energy_dict.update(total_consumption)
 
 
+            electrical_consumption = {
+                f"electricityConsumptionBuilding{idx + 1}": {
+                    "type": "+Energy-RegularTimeSeries",
+                    "attributes": {
+                        "energy-acquisitionMethod": energy_acquisition_method,
+                        "energy-interpolationType": energy_interpolation_method,
+                        "energy-temporalExtent": {
+                            "energy-startPeriod": energy_measurement_period["start_date"],
+                            "energy-endPeriod": energy_measurement_period["end_date"],
+                        },
+                        "energy-timeInterval": {
+                            "energy-value": time_interval,
+                            "energy-uom": time_uom
+                        },
+                        "energy-values": bld_elem[self.headers[16]],
+                        "energy-uom": "kWh"
+                    }
+                }
+            }
+
+            self.energy_dict.update(electrical_consumption)
+
+            cooling_consumption = {
+                f"coolingConsumptionBuilding{idx + 1}": {
+                    "type": "+Energy-RegularTimeSeries",
+                    "attributes": {
+                        "energy-acquisitionMethod": energy_acquisition_method,
+                        "energy-interpolationType": energy_interpolation_method,
+                        "energy-temporalExtent": {
+                            "energy-startPeriod": energy_measurement_period["start_date"],
+                            "energy-endPeriod": energy_measurement_period["end_date"],
+                        },
+                        "energy-timeInterval": {
+                            "energy-value": time_interval,
+                            "energy-uom": time_uom
+                        },
+                        "energy-values": bld_elem[self.headers[17]],
+                        "energy-uom": "kWh"
+                    }
+                }
+            }
+
+            self.energy_dict.update(cooling_consumption)
+
+            heating_consumption = {
+                f"heatingConsumptionBuilding{idx + 1}": {
+                    "type": "+Energy-RegularTimeSeries",
+                    "attributes": {
+                        "energy-acquisitionMethod": energy_acquisition_method,
+                        "energy-interpolationType": energy_interpolation_method,
+                        "energy-temporalExtent": {
+                            "energy-startPeriod": energy_measurement_period["start_date"],
+                            "energy-endPeriod": energy_measurement_period["end_date"],
+                        },
+                        "energy-timeInterval": {
+                            "energy-value": time_interval,
+                            "energy-uom": time_uom
+                        },
+                        "energy-values": bld_elem[self.headers[18]],
+                        "energy-uom": "kWh"
+                    }
+                }
+            }
+
+            self.energy_dict.update(heating_consumption)
+
+        weather_file_path = weather_config_data["weather_file_path"]
+        weather_uom = weather_config_data["uom"]
+
+        values_list = []
+        with open(weather_file_path, 'r') as file_csv:
+            csv_reader = csv.reader(file_csv)
+            for row in csv_reader:
+                value = row[measured_element]
+                values_list.append(value)
+
+        weather_acq_method = weather_config_data["weather_object_config"]["energy_acquisition_method"]
+        weather_interpol_method = weather_config_data["weather_object_config"]["energy_interpolation_method"]
+        weather_start_date = weather_config_data["weather_object_config"]["energy_measurement_period"]["start_date"]
+        weather_end_date = weather_config_data["weather_object_config"]["energy_measurement_period"]["end_date"]
+
+        wea_delta_interval = datetime.strptime(weather_end_date, "%Y-%m-%d") - datetime.strptime(weather_start_date, "%Y-%m-%d")
+        wea_time_interval = ((wea_delta_interval.days + wea_delta_interval.seconds / (60 * 60 * 24)) / 365) / len(values_list)
+        wea_no_of_years = round(wea_time_interval, 1)
+        wea_no_of_months = round((wea_time_interval * 12), 1)
+        wea_no_of_weeks = round((wea_time_interval * 52), 1)
+        wea_no_of_days = round((wea_time_interval * 365), 1)
+
+        if wea_time_interval >= 1:
+            wea_uom = "years"
+            wea_time_interval = wea_no_of_years
+        elif 1 / 12 <= wea_time_interval < 1:
+            wea_uom = "months"
+            wea_time_interval = wea_no_of_months
+        elif 1 / 52 <= wea_time_interval < 1 / 12:
+            wea_uom = "weeks"
+            wea_time_interval = wea_no_of_weeks
+        else:
+            wea_uom = "days"
+            wea_time_interval = wea_no_of_days
+
+        weather = {
+            f"{measured_element}Data{city}": {
+                "type": "+Energy-RegularTimeSeries",
+                "attributes": {
+                    "energy-acquisitionMethod": weather_acq_method,
+                    "energy-interpolationType": weather_interpol_method,
+                    "energy-temporalExtent": {
+                        "energy-startPeriod": weather_start_date,
+                        "energy-endPeriod": weather_end_date,
+                    },
+                    "energy-timeInterval": {
+                        "energy-value": wea_time_interval,
+                        "energy-uom": wea_uom
+                    },
+                    "energy-values": values_list,
+                    "energy-uom": weather_uom
+                }
+            }
+        }
+
+        self.energy_dict.update(weather)
 
         return self.energy_ext, self.energy_dict

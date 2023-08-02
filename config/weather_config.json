@@ -1,4 +1,14 @@
 {
+  "weather_object_config": {
+    "measured_element": "temperature",
+    "weather_element": "airTemperature",
+    "energy_acquisition_method": "estimation",
+    "energy_interpolation_method": "averageInPrecedingInterval",
+    "energy_measurement_period": {
+    "start_date": "2022-01-01",
+    "end_date": "2022-12-31"
+      }
+    },
   "distribution_parameters": {
     "expected_value": {
       "january": 3,
@@ -16,5 +26,6 @@
     },
   "std_deviation": 2
   },
-  "weather_file_path": "config/temperature_data.csv"
+  "weather_file_path": "config/temperature_data.csv",
+  "uom": "°C"
 }

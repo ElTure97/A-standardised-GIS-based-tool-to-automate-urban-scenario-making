@@ -24,8 +24,9 @@ If simultaneous different building targets data managing is needed, the code req
 9) Give as a list the fields you need for your application. 
 Geometry, height, age, use destination, number of floors, area, gross floor area, building type, no. of families, no. of people per building, building census section number, 
 tabula building type identifier, POD UID (randomly generated if not available), building infiltration rate (random generated in range [0,1] if not available), 
-cooling system (boolean value randomly generated if not available), heating system (boolean value randomly generated too if not available) and energy demand, must be respectively the 
-1st, the 2nd, the 3rd, the 4th, the 5th, the 6th, the 7th, the 8th, the 9th, the 10th, the 11th, the 12th, the 13th, the 14th, the 15th, the 16th and the 17th element of the list. 
+cooling system (boolean value randomly generated if not available), heating system (boolean value randomly generated too if not available), total energy demand, 
+electricity energy demand, cooling energy demand and heating energy demand must be respectively the 
+1st, the 2nd, the 3rd, the 4th, the 5th, the 6th, the 7th, the 8th, the 9th, the 10th, the 11th, the 12th, the 13th, the 14th, the 15th, the 16th, 17th, the 18th, the 19th and the 20th element of the list. 
 In such way, the application is allowed to correctly work by retrieving them by exploiting list indices instead of headers name.
 Additional features would require additional modules and then code adaptation;
 10) Specify the input files path; 

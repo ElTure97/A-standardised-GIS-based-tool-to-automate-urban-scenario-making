@@ -43,7 +43,7 @@ strictly choosing one among the following methods and interpolation strategies r
   "precedingTotal";
   "succeedingTotal".
 
-Eventually, also the energy measurement period must be specified by putting the start date and the end date in the date format "YYYY-MM-DD".
+Eventually, the energy measurement period must be specified by putting the start date and the end date in the date format "YYYY-MM-DD".
 
 The code has been written for conversion to CityJSON v. 1.1. 
 If to a later or an older version conversion is needed, the code would require some adaptations in the module methods/cj_converter.py.
@@ -59,11 +59,32 @@ Additional ADEs modules would require to be imported into the script to_cj.py.
 
 In the same folder, another configuration file is there. 
 It is needed for running the "weather_data_generator.py" script, in case of not available weather data.
-That script outputs a csv file containing a daily record for a year ONLY referred to air temperature.
-The user is required to put the average temperature associated with each month and the standard deviation both as float or integer values, expressed in degrees.
-Those values will be the parameters of the gaussian distributions exploited for generating sample temperature data.
+That script outputs a csv file containing a daily record for a year referred to the chosen weather element.
 
-In the same file, also the path for retrieving weather data must be specified. 
+First, the user must configure the parameters for correctly setting the weather object inside the output cityjson.
+Then, user is required to put the weather element as a string by strictly choosing one among the following weather elements:
+  
+  "airTemperature";
+  "humidity";
+  "windSpeed";
+  "cloudiness";
+  "globalSolarIrradiance";
+  "directSolarIrradiance";
+  "diffuseSolarIrradiance";
+  "terrestrialEmission";
+  "downwardTerrestrialRadiation";
+  "daylightIlluminance".
 
-Pay attention to the fact that the code has been developed to deal with same-structured weather data as before, independently on the kind of data (csv with just one column).
-In case of different input weather data, some code adaptations might be needed.
+Following, the measured weather element as a string (e.g. temperature, humidity...), the acquisition method through which weather data have been achieved and the interpolation method both as a string
+as for energy data, strictly choosing one among the methods and interpolation strategies previously listed.
+
+Thus, the weather measurement period must be specified by putting the start date and the end date in the date format "YYYY-MM-DD".
+
+After having correctly set the parameters for the weather city object, the user is required to set the average value associated with each month and the standard deviation both as float or integer values.
+Those values will be the parameters of the gaussian distributions exploited for generating sample weather data.
+
+In the same file, also the path for retrieving weather data and the unit of measurement of them must be specified both as a string.
+Those two, are required even if weather data are still available with no need of generating "fake" samples.
+
+Pay attention to the fact that the code has been developed to deal with same-structured weather data as before  (csv with just one column) and for managing ONE weather file a time, independently on the kind of data.
+In case of different or several input weather data, code adaptations might be needed.

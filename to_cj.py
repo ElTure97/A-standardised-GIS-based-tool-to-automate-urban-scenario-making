@@ -36,6 +36,9 @@ with open("utility/config/ding0_config.json", "r") as j:
     ding0_data = json.load(j)
 MV_district = str(ding0_data["MV_district"])
 
+with open("config/weather_config.json", "r") as k:
+    weather_config_data = json.load(k)
+
 gdf = gpd.read_file(f"buildings/output/{city}_{building_target}")
 # headers = list(gdf.columns)
 
@@ -46,7 +49,7 @@ ext_city_list = []
 # further ADEs modules must be added here following the same syntax
 # pay attention to append the extension to the right list since according to that, the extension will be applied to buildings or city
 energy_ADE_obj = EnergyADE(gdf)
-energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period)
+energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data)
 ext_bld_list.append(energy_bld_ext)
 
 ding0_path = f"utility/ding0-output/{MV_district}/*.csv"

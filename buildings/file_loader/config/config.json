@@ -42,7 +42,10 @@
         "infiltration_rate",
         "cooled",
         "heated",
-        "building:demand"
+        "building:total_energy_demand",
+        "building:electricity_demand",
+        "building:cooling_demand",
+        "building:heating_demand"
     ],
     "shapefile": "study_case/Torino/shapefile",
     "DEM": {
