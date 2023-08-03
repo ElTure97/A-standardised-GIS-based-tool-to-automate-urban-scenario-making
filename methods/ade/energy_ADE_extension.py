@@ -194,7 +194,13 @@ class EnergyADE:
                 }
             }
 
-            self.energy_dict.update(electrical_consumption)
+            if bld_elem[self.headers[7]] > 0:
+                self.energy_dict.update(electrical_consumption)
+            else:
+                self.energy_dict[f"thermalZone{idx + 1}"]["attributes"]["energy-energyDemand"].remove({
+                                "energy-energyAmount": f"electricityConsumptionBuilding{idx + 1}",
+                                "energy-endUse": "electricalAppliances"
+                            })
 
             cooling_consumption = {
                 f"coolingConsumptionBuilding{idx + 1}": {
@@ -216,7 +222,13 @@ class EnergyADE:
                 }
             }
 
-            self.energy_dict.update(cooling_consumption)
+            if bld_elem[self.headers[13]]:
+                self.energy_dict.update(cooling_consumption)
+            else:
+                self.energy_dict[f"thermalZone{idx + 1}"]["attributes"]["energy-energyDemand"].remove({
+                                "energy-energyAmount": f"coolingConsumptionBuilding{idx + 1}",
+                                "energy-endUse": "spaceCooling"
+                            })
 
             heating_consumption = {
                 f"heatingConsumptionBuilding{idx + 1}": {
@@ -238,7 +250,13 @@ class EnergyADE:
                 }
             }
 
-            self.energy_dict.update(heating_consumption)
+            if bld_elem[self.headers[14]]:
+                self.energy_dict.update(heating_consumption)
+            else:
+                self.energy_dict[f"thermalZone{idx + 1}"]["attributes"]["energy-energyDemand"].remove({
+                                "energy-energyAmount": f"heatingConsumptionBuilding{idx + 1}",
+                                "energy-endUse": "spaceHeating"
+                            })
 
         weather_file_path = weather_config_data["weather_file_path"]
         weather_uom = weather_config_data["uom"]
