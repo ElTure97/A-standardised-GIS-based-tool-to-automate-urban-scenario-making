@@ -187,7 +187,7 @@ class CityJSONCreator(JSON_Writer):
             building = {
                 "type": "Building",
                 "attributes": {
-                    "name": f"building{index + 1}",
+                    "name": f"{row[self.headers[2]]}Building{index + 1}",
                     "censusSection": int(row[self.headers[9]]),
                     # "measuredHeight": float(row[self.headers[0]]),
                     "yearOfConstruction": int(row[self.headers[1]]),
@@ -225,7 +225,7 @@ class CityJSONCreator(JSON_Writer):
                 building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0][0])  # default value
 
             # add building object to CityObjects dict
-            self.cityjson_data["CityObjects"][f"id-{index + 1}"] = building
+            self.cityjson_data["CityObjects"][f"building{index + 1}"] = building
             print(f"Building {index + 1} succesfully added to cityjson!")
 
         for ade_elem in ext_name:

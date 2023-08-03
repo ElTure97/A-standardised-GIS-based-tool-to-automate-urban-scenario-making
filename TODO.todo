@@ -1,7 +1,6 @@
 TODO ENTRO 01/08:
 1) Adattare Energy ADE alle specifiche dell'UML:
-Mappare BuildingPhysics, EnergySystem, Material e Occupants o sottoforma di extraCityObjects:
-- Adeguare Energy-TimeInterval a numero di misurazioni effettuate in modo da renderlo scalabile.
+Mappare BuildingPhysics, EnergySystem, Material e Occupants o sottoforma di extraCityObjects;
 3) Fare diagramma su struttura della pipeline;
 4) Verificare validità dell'utility network extension (capire significato di +NetworkGraph e +FeatureGraph);
 5) Mappare rete di distribuzione Torino e creare relazione bus:buildings (1:n) (Attendere news da Pietro);

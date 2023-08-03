@@ -70,12 +70,6 @@ class EnergyADE:
                 f"thermalZone{idx + 1}": {
                     "type": "+Energy-ThermalZone",
                     "attributes": {
-                        "energy-floorArea": [
-                            {
-                                "energy-value": bld_elem[self.headers[4]],
-                                "energy-uom": "m2"
-                            }
-                        ],
                         "energy-infiltrationRate": float(bld_elem[self.headers[12]]),
                         "energy-isCooled": bool(bld_elem[self.headers[13]]),
                         "energy-isHeated": bool(bld_elem[self.headers[14]]),
@@ -111,7 +105,7 @@ class EnergyADE:
                 f"usageZone{idx + 1}": {
                     "type": "+Energy-UsageZone",
                     "attributes": {
-                        "energy-usageZoneType": [bld_elem[self.headers[2]]],
+                        "energy-usageZoneType": bld_elem[self.headers[2]],
                     },
                     "energy-occupiedBy":
                         [
@@ -253,7 +247,7 @@ class EnergyADE:
         with open(weather_file_path, 'r') as file_csv:
             csv_reader = csv.reader(file_csv)
             for row in csv_reader:
-                value = row[0]
+                value = round(float(row[0]), 1)
                 values_list.append(value)
 
         weather_acq_method = weather_config_data["weather_object_config"]["energy_acquisition_method"]

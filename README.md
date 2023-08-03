@@ -86,5 +86,5 @@ Those values will be the parameters of the gaussian distributions exploited for 
 In the same file, also the path for retrieving weather data and the unit of measurement of them must be specified both as a string.
 Those two, are required even if weather data are still available with no need of generating "fake" samples.
 
-Pay attention to the fact that the code has been developed to deal with same-structured weather data as before  (csv with just one column) and for managing ONE weather file a time, independently on the kind of data.
+Pay attention to the fact that the code has been developed to deal with same-structured weather data as before  (csv with just one column and no header) and for managing ONE weather file a time, independently on the kind of data.
 In case of different or several input weather data, code adaptations might be needed.

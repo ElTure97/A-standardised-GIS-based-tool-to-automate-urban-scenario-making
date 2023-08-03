@@ -95,7 +95,7 @@
         "energy-fraction": {
           "type": "number"
         },
-        "energy-wavelengthRange": {
+        "energy-wavelengthRfange": {
           "enum": [
             "solar",
             "infrared",

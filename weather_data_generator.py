@@ -44,7 +44,7 @@ for d in range(days_in_a_year):
 
     j += 1
 
-df.to_csv(f"weather_data/{measured_element}_data.csv", index=False)
+df.to_csv(f"weather_data/{measured_element}_data.csv", index=False, header=None)
 
 
 
