@@ -1,11 +1,9 @@
 TODO ENTRO 01/08:
 1) Adattare Energy ADE alle specifiche dell'UML:
 Mappare BuildingPhysics, EnergySystem, Material e Occupants o sottoforma di extraCityObjects;
-3) Fare diagramma su struttura della pipeline;
-4) Verificare validità dell'utility network extension (capire significato di +NetworkGraph e +FeatureGraph);
-5) Mappare rete di distribuzione Torino e creare relazione bus:buildings (1:n) (Attendere news da Pietro);
-6) Sostituire eventualmente le coordinate dei nodi di distribuzione con coordinate fittizie all'interno del bounding box;
-7) Plottare Utility Network;
-8) Documentare Energy e Utility Network extensions;
+2) Fare diagramma su struttura della pipeline;
+3) Mappare rete di distribuzione Torino e creare relazione bus:buildings (1:n) (Attendere news da Pietro); box;
+4) Plottare Utility Network;
+5) Documentare Energy e Utility Network extensions;
 
 COPIARE TUTTE LE MODIFICHE NELLA CARTELLA C:\Users\Utente\OneDrive - Politecnico di Torino\Laurea Magistrale\thesis_local_backup
