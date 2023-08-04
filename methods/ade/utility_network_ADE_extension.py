@@ -1,55 +1,47 @@
 import pandas as pd
 import geopandas as gpd
-import glob
-import os
+import pandapower as pp
 import requests
 import shapely.wkt
 import time
-from pyproj import Transformer
+from shapely.geometry import Point
 
 
 class UtilityNetworkADE:
 
-    def __init__(self, path, crs, h_slm):
+    def __init__(self, path, crs, zone, h_slm):
         self.path = path
         self.crs = crs
+        self.zone = zone
         self.h_slm = h_slm
-        self.dataframe_dict = {}
+        self.network = {}
         self.un_dict = {}
 
-    def load_csv(self):
-        csv_file = glob.glob(self.path)
-        for file in csv_file:
-            df = pd.read_csv(file)
-            file_name = os.path.splitext(os.path.basename(file))[0]
-            self.dataframe_dict[file_name] = df
-        return self.dataframe_dict
+    def load_pp(self):
+        network = pp.from_pickle(self.path)
+        # clean empty dfs
+        self.network = {dataframe_name: dataframe for dataframe_name, dataframe in network.items() if not isinstance(dataframe, pd.DataFrame) or not dataframe.empty}
+        return self.network
 
     def check_crs(self):
-        self.dataframe_dict = self.load_csv()
-        network_df = self.dataframe_dict['network']
-        buses_df = self.dataframe_dict['buses']
-        buses_df = buses_df.dropna(subset=["x", "y"])
-        network_df = network_df.rename(columns={'mv_grid_district_geom': 'geometry'})
-        network_df['geometry'] = network_df['geometry'].apply(shapely.wkt.loads)
-        network_gdf = gpd.GeoDataFrame(network_df, geometry='geometry')
-        network_gdf.set_crs(epsg=network_gdf['srid'][0], inplace=True) # for single network loading
-        # network_gdf = network_gdf.set_geometry(network_gdf['geometry'])
+        self.network = self.load_pp()
+        # network_df = self.network['ext_grid']
+        buses_df = self.network['bus']
+        buses_gdf = gpd.GeoDataFrame[buses_df]
 
-        current_crs = network_gdf.crs
-        target_crs = self.crs
+        def multiply_coordinates(point, factor):
+            new_x = point.x * factor
+            new_y = point.y * factor
+            return Point(new_x, new_y)
 
-        if current_crs != target_crs:
-            network_gdf = network_gdf.to_crs(target_crs)
+        # multiply gdf coords
+        factor = 1000
+        buses_gdf['geometry'] = buses_gdf['geometry'].apply(lambda point: multiply_coordinates(point, factor))
 
-            transformer = Transformer.from_crs(current_crs, target_crs)
+        buses_gdf = buses_gdf.set_crs(f"EPSG:326{self.zone}")
+        self.buses_gdf = buses_gdf.to_crs(self.crs)
 
-            buses_df['x'], buses_df['y'] = transformer.transform(buses_df['x'], buses_df['y'])
-
-        self.dataframe_dict['network'] = network_gdf
-        self.dataframe_dict['buses'] = buses_df
-
-        return self.dataframe_dict
+        return self.buses_gdf
 
     def get_elevations(self, df, max_retry, delay):
         points = []
@@ -132,18 +124,18 @@ class UtilityNetworkADE:
         return df
 
     def map_ext(self):
-        self.dataframe_dict = self.check_crs()
+        self.network = self.check_crs()
 
-        network_gdf = self.dataframe_dict['network']
-        buses_df = self.dataframe_dict['buses']
+        network_gdf = self.network['network']
+        buses_df = self.network['buses']
         buses_gdf = self.get_elevations(buses_df, max_retry=10, delay=0.5)
-        lines_df = self.dataframe_dict['lines']
+        lines_df = self.network['lines']
         lines_df = lines_df[lines_df['bus0'].isin(buses_gdf['name']) & lines_df['bus1'].isin(buses_gdf['name'])]
-        loads_df = self.dataframe_dict['loads']
-        generators_df = self.dataframe_dict['generators']
-        switches_df = self.dataframe_dict['switches']
-        transformers_df = self.dataframe_dict['transformers']
-        transformers_hvmv_df = self.dataframe_dict['transformers_hvmv']
+        loads_df = self.network['loads']
+        generators_df = self.network['generators']
+        switches_df = self.network['switches']
+        transformers_df = self.network['transformers']
+        transformers_hvmv_df = self.network['transformers_hvmv']
 
         for n, network_elem in network_gdf.iterrows():
             network = {

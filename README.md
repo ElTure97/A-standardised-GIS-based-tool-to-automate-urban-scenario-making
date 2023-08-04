@@ -45,6 +45,8 @@ strictly choosing one among the following methods and interpolation strategies r
 
 Eventually, the energy measurement period must be specified by putting the start date and the end date in the date format "YYYY-MM-DD".
 
+Instead, regarding the utility extension, the pandapower file path to be used for mapping the extension schema must be specified if available, set to None otherwise (if other file sources are used).
+
 The code has been written for conversion to CityJSON v. 1.1. 
 If to a later or an older version conversion is needed, the code would require some adaptations in the module methods/cj_converter.py.
 

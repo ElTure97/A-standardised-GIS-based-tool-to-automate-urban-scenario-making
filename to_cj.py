@@ -2,7 +2,8 @@ import geopandas as gpd
 import json
 from methods.cj_converter import *
 from methods.ade.energy_ADE_extension import *
-from methods.ade.utility_network_ADE_extension_for_ding0 import *
+# from methods.ade.utility_network_ADE_extension_for_ding0 import *
+from methods.ade.utility_network_ADE_extension import *
 
 with open("buildings/file_loader/config/config.json", "r") as f:
     config_data = json.load(f)
@@ -27,6 +28,7 @@ crs_url = cj_config_data["crs_url"]
 energy_acquisition_method = cj_config_data["energy_acquisition_method"]
 energy_interpolation_method = cj_config_data["energy_interpolation_method"]
 energy_measurement_period = cj_config_data["energy_measurement_period"]
+pp_path = cj_config_data["pp_utility_file_path"]
 
 with open("buildings/bounding_box.json", "r") as h:
     bbox_data = json.load(h)
@@ -52,8 +54,12 @@ energy_ADE_obj = EnergyADE(gdf)
 energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data)
 ext_bld_list.append(energy_bld_ext)
 
-ding0_path = f"utility/ding0-output/{MV_district}/*.csv"
-un_ADE = UtilityNetworkADE(ding0_path, crs, h_slm)
+# ding0_path = f"utility/ding0-output/{MV_district}/*.csv"
+# un_ADE = UtilityNetworkADE(ding0_path, crs, h_slm)
+
+
+un_ADE = UtilityNetworkADE(pp_path, crs, UTM_zone, h_slm)
+
 utility_network_ext = un_ADE.map_ext()
 
 ext_city_list.append(energy_city_ext)

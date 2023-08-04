@@ -22,5 +22,6 @@
   "energy_measurement_period": {
     "start_date": "2022-01-01",
     "end_date": "2022-12-31"
-  }
+  },
+  "pp_utility_file_path": "utility/utility_network_data/network_PV.p"
 }
