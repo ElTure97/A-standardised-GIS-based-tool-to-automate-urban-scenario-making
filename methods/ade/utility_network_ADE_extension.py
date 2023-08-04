@@ -39,9 +39,9 @@ class UtilityNetworkADE:
         buses_gdf['geometry'] = buses_gdf['geometry'].apply(lambda point: multiply_coordinates(point, factor))
 
         buses_gdf = buses_gdf.set_crs(f"EPSG:326{self.zone}")
-        self.buses_gdf = buses_gdf.to_crs(self.crs)
+        buses_gdf = buses_gdf.to_crs(self.crs)
 
-        return self.buses_gdf
+        return buses_gdf
 
     def get_elevations(self, df, max_retry, delay):
         points = []
