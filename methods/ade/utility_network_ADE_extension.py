@@ -27,7 +27,7 @@ class UtilityNetworkADE:
         self.network = self.load_pp()
         # network_df = self.network['ext_grid']
         buses_df = self.network['bus']
-        buses_gdf = gpd.GeoDataFrame[buses_df]
+        buses_gdf = gpd.GeoDataFrame(buses_df)
 
         def multiply_coordinates(point, factor):
             new_x = point.x * factor
@@ -43,26 +43,26 @@ class UtilityNetworkADE:
 
         return buses_gdf
 
-    def get_elevations(self, df, max_retry, delay):
+    def get_elevations(self, gdf, max_retry, delay):
         points = []
-        for i, elem in df.iterrows():
-            points.append((elem['x'], elem['y']))
-        locations = "|".join([f"{point[1]},{point[0]}" for point in points])
+        for i, elem in gdf.iterrows():
+            points.append((elem['geometry']))
+        locations = "|".join([f"{point.y},{point.x}" for point in points])
         url = f"https://api.open-elevation.com/api/v1/lookup?locations={locations}"
 
         request_size = len(url.encode('utf-8'))
 
         if request_size <= 1024:
             # GET API
-            df = self.send_get_request(df, points, url, max_retry, delay)
+            gdf = self.send_get_request(gdf, points, url, max_retry, delay)
         else:
             # POST API
-            df = self.send_post_request(df, points, max_retry, delay)
+            gdf = self.send_post_request(gdf, points, max_retry, delay)
 
-        df['geometry'] = [f"POINT ({row['x']} {row['y']} {row['z']})" for r, row in df.iterrows()]
-        df.drop(['x', 'y', 'z'], axis=1, inplace=True)
-        df['geometry'] = df['geometry'].apply(shapely.wkt.loads)
-        gdf = gpd.GeoDataFrame(df, geometry='geometry')
+        gdf['geometry'] = [f"POINT ({row['geometry'].y} {row['geometry'].x} {row['z']})" for r, row in gdf.iterrows()]
+        gdf.drop(['z'], axis=1, inplace=True)
+        gdf['geometry'] = gdf['geometry'].apply(shapely.wkt.loads)
+        gdf = gpd.GeoDataFrame(gdf, geometry='geometry')
 
         return gdf
 
