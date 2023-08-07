@@ -57,8 +57,7 @@ ext_bld_list.append(energy_bld_ext)
 # ding0_path = f"utility/ding0-output/{MV_district}/*.csv"
 # un_ADE = UtilityNetworkADE(ding0_path, crs, h_slm)
 
-
-un_ADE = UtilityNetworkADE(pp_path, crs, UTM_zone, h_slm)
+un_ADE = UtilityNetworkADE(pp_path, crs, UTM_zone, h_slm, bbox)
 
 utility_network_ext = un_ADE.map_ext()
 

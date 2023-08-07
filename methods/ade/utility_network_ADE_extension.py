@@ -1,19 +1,22 @@
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 import pandapower as pp
 import requests
 import shapely.wkt
 import time
-from shapely.geometry import Point
+from shapely.geometry import Point, Polygon, LineString
+from pyproj import Transformer
 
 
 class UtilityNetworkADE:
 
-    def __init__(self, path, crs, zone, h_slm):
+    def __init__(self, path, crs, zone, h_slm, bounding_box):
         self.path = path
         self.crs = crs
         self.zone = zone
         self.h_slm = h_slm
+        self.bounding_box = bounding_box
         self.network = {}
         self.un_dict = {}
 
@@ -23,11 +26,19 @@ class UtilityNetworkADE:
         self.network = {dataframe_name: dataframe for dataframe_name, dataframe in network.items() if not isinstance(dataframe, pd.DataFrame) or not dataframe.empty}
         return self.network
 
-    def check_crs(self):
+    def geometric_operations(self):
         self.network = self.load_pp()
         # network_df = self.network['ext_grid']
         buses_df = self.network['bus']
+        loads_df = self.network['load']
+        gens_df = self.network['sgen']
+        trans_df = self.network['trafo']
+        lines_df = self.network['line']
+
         buses_gdf = gpd.GeoDataFrame(buses_df)
+        loads_gdf = gpd.GeoDataFrame(loads_df)
+        gens_gdf = gpd.GeoDataFrame(gens_df)
+        trans_gdf = gpd.GeoDataFrame(trans_df)
 
         def multiply_coordinates(point, factor):
             new_x = point.x * factor
@@ -36,82 +47,79 @@ class UtilityNetworkADE:
 
         # multiply gdf coords
         factor = 1000
+        src_crs = f"EPSG:326{self.zone}"
         buses_gdf['geometry'] = buses_gdf['geometry'].apply(lambda point: multiply_coordinates(point, factor))
 
-        buses_gdf = buses_gdf.set_crs(f"EPSG:326{self.zone}")
-        buses_gdf = buses_gdf.to_crs(self.crs)
+        buses_gdf = buses_gdf.set_crs(src_crs)
+        loads_gdf = loads_gdf.set_crs(src_crs)
+        gens_gdf = gens_gdf.set_crs(src_crs)
+        trans_gdf = trans_gdf.set_crs(src_crs)
 
-        return buses_gdf
+        buses_gdf = buses_gdf.to_crs(self.crs)
+        loads_gdf = loads_gdf.to_crs(self.crs)
+        gens_gdf = gens_gdf.to_crs(self.crs)
+        trans_gdf = trans_gdf.to_crs(self.crs)
+
+        transformer = Transformer.from_crs(src_crs, self.crs, always_xy=True)
+
+        def transform_coordinates(coord_list):
+            transformed_coords = [transformer.transform(x, y) for x, y in coord_list]
+            return LineString(transformed_coords)
+
+        lines_df['geometries'] = lines_df['coordinates'].apply(transform_coordinates)
+
+        lines_gdf = gpd.GeoDataFrame(lines_df, geometry='geometries', crs=self.crs)
+
+        def filter_by_bbox(gdf):
+            min_lon, min_lat, max_lon, max_lat, min_z, max_z = self.bounding_box
+
+            bbox = Polygon([(min_lon, min_lat), (max_lon, min_lat), (max_lon, max_lat), (min_lon, max_lat)])
+
+            intersected = gdf[gdf.geometry.apply(lambda geom: bbox.intersects(geom) or bbox.contains(geom))]
+
+            return intersected
+
+        buses_gdf = filter_by_bbox(buses_gdf)
+        loads_gdf = filter_by_bbox(loads_gdf)
+        gens_gdf = filter_by_bbox(gens_gdf)
+        trans_gdf = filter_by_bbox(trans_gdf)
+        lines_gdf = filter_by_bbox(lines_gdf)
+
+        return buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf
 
     def get_elevations(self, gdf, max_retry, delay):
-        points = []
-        for i, elem in gdf.iterrows():
-            points.append((elem['geometry']))
-        locations = "|".join([f"{point.y},{point.x}" for point in points])
-        url = f"https://api.open-elevation.com/api/v1/lookup?locations={locations}"
+        points = [(elem['geometry']) for _, elem in gdf.iterrows()]
+        elevs = self.send_get_or_post_request(points, max_retry, delay)
 
-        request_size = len(url.encode('utf-8'))
+        updated_geometries = []
+        for geom, elev in zip(gdf['geometry'], elevs):
+            if isinstance(geom, Point):
+                coords = list(geom.coords)
+                coords[0] = (coords[0][0], coords[0][1], elev)
+                updated_geometries.append(Point(coords[0]))
+            elif isinstance(geom, LineString):
+                coords = list(geom.coords)
+                updated_coords = [(coord[0], coord[1], elev) for coord in coords]
+                updated_geometries.append(LineString(updated_coords))
 
-        if request_size <= 1024:
-            # GET API
-            gdf = self.send_get_request(gdf, points, url, max_retry, delay)
-        else:
-            # POST API
-            gdf = self.send_post_request(gdf, points, max_retry, delay)
-
-        gdf['geometry'] = [f"POINT ({row['geometry'].y} {row['geometry'].x} {row['z']})" for r, row in gdf.iterrows()]
-        gdf.drop(['z'], axis=1, inplace=True)
-        gdf['geometry'] = gdf['geometry'].apply(shapely.wkt.loads)
-        gdf = gpd.GeoDataFrame(gdf, geometry='geometry')
-
+        gdf['geometry'] = updated_geometries
         return gdf
 
-
-
-    def send_get_request(self, df, points, url, max_retry, delay):
-        retry_count = 0
-        while retry_count < max_retry:
-            response = requests.get(url)
-
-            if response.status_code == 200:
-                print("Success!")
-                data = response.json()
-                elevations = [result["elevation"] for result in data["results"]]
-                df['z'] = elevations
-                return df
-            else:
-                print(f"Request failed. New attempt in {delay} s")
-                retry_count += 1
-                time.sleep(delay)
-
-        df['z'] = [self.h_slm] * len(points)
-
-        return df
-
-    def send_post_request(self, df, points, max_retry, delay):
+    def send_get_or_post_request(self, points, max_retry, delay):
         url = "https://api.open-elevation.com/api/v1/lookup"
         batch_size = 100  # Number of points to send in each POST request
+        elevations = [np.nan] * len(points)  # Initialize with NaNs
         retry_count = 0
+
         while retry_count < max_retry:
-            for i in range(0, len(points), batch_size):
-                batch = points[i:i + batch_size]
-                data = {"locations": [{"latitude": point[1], "longitude": point[0]} for point in batch]}
+            if len(url.encode('utf-8')) <= 1024:
+                # GET API
+                elevations = self.send_get_request(points, url, delay)
+            else:
+                # POST API
+                elevations = self.send_post_request(points)
 
-                response = requests.post(url, json=data)
-
-                if response.status_code == 200:
-                    print("Success!")
-                    try:
-                        batch_elevations = [result["elevation"] for result in response.json()["results"]]
-                        # Assign elevations to the corresponding subset of 'df'
-                        df.loc[i:i + batch_size - 1, 'z'] = batch_elevations
-                    except ValueError:
-                        print("Invalid JSON response.")
-                        break
-                else:
-                    print(f"Request failed for batch {i // batch_size + 1}.")
-
-            if df['z'].isna().any():
+            if np.isnan(elevations).any():
                 print("Retrying failed points...")
                 retry_count += 1
                 time.sleep(delay)
@@ -119,9 +127,44 @@ class UtilityNetworkADE:
                 break
 
         # Fill remaining missing values with default values
-        df['z'].fillna(self.h_slm, inplace=True)
+        elevations = [e if not np.isnan(e) else self.h_slm for e in elevations]
 
-        return df
+        return elevations
+
+    def send_get_request(self, points, url, delay):
+        response = requests.get(url)
+        if response.status_code == 200:
+            print("Success!")
+            data = response.json()
+            elevations = [result["elevation"] for result in data["results"]]
+            return elevations
+        else:
+            print(f"Request failed. New attempt in {delay} s")
+            return [np.nan] * len(points)
+
+    def send_post_request(self, points):
+        url = "https://api.open-elevation.com/api/v1/lookup"
+        batch_size = 100  # Number of points to send in each POST request
+        elevations = [np.nan] * len(points)  # Initialize with NaNs
+
+        for i in range(0, len(points), batch_size):
+            batch = points[i:i + batch_size]
+            data = {"locations": [{"latitude": point.y, "longitude": point.x} for point in batch]}
+
+            response = requests.post(url, json=data)
+
+            if response.status_code == 200:
+                print("Success!")
+                try:
+                    batch_elevations = [result["elevation"] for result in response.json()["results"]]
+                    elevations[i:i + len(batch_elevations)] = batch_elevations
+                except ValueError:
+                    print("Invalid JSON response.")
+                    break
+            else:
+                print(f"Request failed for batch {i // batch_size + 1}.")
+
+        return elevations
 
     def map_ext(self):
         self.network = self.check_crs()
