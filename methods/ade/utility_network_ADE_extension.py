@@ -5,18 +5,20 @@ import pandapower as pp
 import requests
 import shapely.wkt
 import time
-from shapely.geometry import Point, Polygon, LineString
+from shapely.geometry import Point, Polygon, MultiPolygon, LineString
 from pyproj import Transformer
 
 
 class UtilityNetworkADE:
 
-    def __init__(self, path, crs, zone, h_slm, bounding_box):
+    def __init__(self, path, crs, zone, city, h_slm, bounding_box, buildings_gdf):
         self.path = path
         self.crs = crs
         self.zone = zone
+        self.city = city
         self.h_slm = h_slm
         self.bounding_box = bounding_box
+        self.buildings_gdf = buildings_gdf
         self.network = {}
         self.un_dict = {}
 
@@ -34,6 +36,7 @@ class UtilityNetworkADE:
         gens_df = self.network['sgen']
         trans_df = self.network['trafo']
         lines_df = self.network['line']
+        switches_df = self.network['switch']
 
         buses_gdf = gpd.GeoDataFrame(buses_df)
         loads_gdf = gpd.GeoDataFrame(loads_df)
@@ -66,9 +69,9 @@ class UtilityNetworkADE:
             transformed_coords = [transformer.transform(x, y) for x, y in coord_list]
             return LineString(transformed_coords)
 
-        lines_df['geometries'] = lines_df['coordinates'].apply(transform_coordinates)
-
-        lines_gdf = gpd.GeoDataFrame(lines_df, geometry='geometries', crs=self.crs)
+        lines_df['geometry'] = lines_df['coordinates'].apply(transform_coordinates)
+        lines_gdf = gpd.GeoDataFrame(lines_df, geometry='geometry', crs=self.crs)
+        lines_gdf = lines_gdf.drop(columns=['coordinates'])
 
         def filter_by_bbox(gdf):
             min_lon, min_lat, max_lon, max_lat, min_z, max_z = self.bounding_box
@@ -85,7 +88,7 @@ class UtilityNetworkADE:
         trans_gdf = filter_by_bbox(trans_gdf)
         lines_gdf = filter_by_bbox(lines_gdf)
 
-        return buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf
+        return buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df
 
     def get_elevations(self, gdf, max_retry, delay):
         points = [(elem['geometry']) for _, elem in gdf.iterrows()]
@@ -101,14 +104,17 @@ class UtilityNetworkADE:
                 coords = list(geom.coords)
                 updated_coords = [(coord[0], coord[1], elev) for coord in coords]
                 updated_geometries.append(LineString(updated_coords))
+            else:
+                # to be defined what should be done in case of different geometries
+                pass
 
         gdf['geometry'] = updated_geometries
         return gdf
 
     def send_get_or_post_request(self, points, max_retry, delay):
         url = "https://api.open-elevation.com/api/v1/lookup"
-        batch_size = 100  # Number of points to send in each POST request
-        elevations = [np.nan] * len(points)  # Initialize with NaNs
+        batch_size = 100  # number of points to send in each POST request
+        elevations = [np.nan] * len(points)  # initialize with NaNs
         retry_count = 0
 
         while retry_count < max_retry:
@@ -117,7 +123,7 @@ class UtilityNetworkADE:
                 elevations = self.send_get_request(points, url, delay)
             else:
                 # POST API
-                elevations = self.send_post_request(points)
+                elevations = self.send_post_request(points, batch_size)
 
             if np.isnan(elevations).any():
                 print("Retrying failed points...")
@@ -126,7 +132,7 @@ class UtilityNetworkADE:
             else:
                 break
 
-        # Fill remaining missing values with default values
+        # filling remaining missing values with default values
         elevations = [e if not np.isnan(e) else self.h_slm for e in elevations]
 
         return elevations
@@ -142,9 +148,8 @@ class UtilityNetworkADE:
             print(f"Request failed. New attempt in {delay} s")
             return [np.nan] * len(points)
 
-    def send_post_request(self, points):
+    def send_post_request(self, points, batch_size):
         url = "https://api.open-elevation.com/api/v1/lookup"
-        batch_size = 100  # Number of points to send in each POST request
         elevations = [np.nan] * len(points)  # Initialize with NaNs
 
         for i in range(0, len(points), batch_size):
@@ -166,245 +171,334 @@ class UtilityNetworkADE:
 
         return elevations
 
+    def associate_buildings_to_loads(self, gdf, loads_gdf):
+        # projecting coordinates to cartographic for more accurate distance computation
+        gdf = gdf.to_crs(epsg=3395)
+        loads_gdf = loads_gdf.to_crs(epsg=3395)
+
+        gdf['nearest_load'] = None
+
+        # neglecting z coordinate for distance computation
+        loads_gdf_2d = loads_gdf.copy()
+        loads_gdf_2d.geometry = loads_gdf_2d.geometry.apply(lambda geom: Point(geom.x, geom.y))
+
+        def to_2d_geometry(geometry):
+            if isinstance(geometry, Polygon):
+                exterior_coords = [(x, y) for x, y, _ in geometry.exterior.coords]
+                return Polygon(exterior_coords)
+            elif isinstance(geometry, MultiPolygon):
+                polygons = []
+                for poly in geometry:
+                    exterior_coords = [(x, y) for x, y, _ in poly.exterior.coords]
+                    polygons.append(Polygon(exterior_coords))
+                return MultiPolygon(polygons)
+            else:
+                # to be defined what it should be done in case of different geometries
+                pass
+
+        for building_idx, building_row in gdf.iterrows():
+            building_geometry = building_row.geometry
+
+            building_geometry_2d = to_2d_geometry(building_geometry)
+
+            # distance computation and nearest load selection
+            loads_gdf_2d['distance'] = loads_gdf_2d.geometry.distance(building_geometry_2d)
+            nearest_load = loads_gdf_2d['distance'].idxmin()
+            loads_gdf_2d.drop(columns=['distance'], inplace=True)
+
+            gdf.at[building_idx, 'nearest_load'] = nearest_load
+
+        load_associations = {(load_idx + 1): [] for load_idx in loads_gdf.index}
+
+        for building_idx, nearest_load in gdf['nearest_load'].items():
+            load_associations[nearest_load + 1].append(f"building{building_idx + 1}")
+
+        return load_associations
+
     def map_ext(self):
-        self.network = self.check_crs()
+        buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df = self.geometric_operations()
+        buses_gdf = self.get_elevations(buses_gdf, max_retry=10, delay=0.5)
+        loads_gdf = self.get_elevations(loads_gdf, max_retry=10, delay=0.5)
+        gens_gdf = self.get_elevations(gens_gdf, max_retry=10, delay=0.5)
+        trans_gdf = self.get_elevations(trans_gdf, max_retry=10, delay=0.5)
+        lines_gdf = self.get_elevations(lines_gdf, max_retry=10, delay=0.5)
 
-        network_gdf = self.network['network']
-        buses_df = self.network['buses']
-        buses_gdf = self.get_elevations(buses_df, max_retry=10, delay=0.5)
-        lines_df = self.network['lines']
-        lines_df = lines_df[lines_df['bus0'].isin(buses_gdf['name']) & lines_df['bus1'].isin(buses_gdf['name'])]
-        loads_df = self.network['loads']
-        generators_df = self.network['generators']
-        switches_df = self.network['switches']
-        transformers_df = self.network['transformers']
-        transformers_hvmv_df = self.network['transformers_hvmv']
+        load_associations = self.associate_buildings_to_loads(self.buildings_gdf, loads_gdf)
 
-        for n, network_elem in network_gdf.iterrows():
-            network = {
-                f"mvGrid{network_elem['name']}":
-                    {
-                        "type": "+Network",
-                        "attributes":
-                            {
-                                "class": "MediumVoltageNetwork",
-                                "usage": "supply",
-                                "function": "supply",
-                                "transportedMedium":
-                                    {
-                                        "type": "+AbstractCommodity"
-                                    }
-                            }
-                    }
-            }
-            self.un_dict.update(network)
-
-            featureNetwork = {
-                f"featureGraph{network_elem['name']}": {
-                    "type": "+FeatureGraph",
+        network = {
+            f"mvGrid{self.city}":
+                {
+                    "type": "+Network",
                     "attributes":
                         {
-                            "node": list(buses_gdf['name']),
-                            "interiorFeatureLink": list(lines_df['name'])
-                        },
-                    "children": list(buses_gdf['name']) + list(lines_df['name'])
-                }
-            }
-
-            self.un_dict.update(featureNetwork)
-
-            for b, bus_elem in buses_gdf.iterrows():
-                # if bus_elem['name'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values:
-                if bus_elem["in_building"]:
-                    nodeValue = "interior"
-                else:
-                    nodeValue = "exterior"
-
-                bus = {
-                    bus_elem['name']: {
-                            "type": "+Node",
-                            "attributes":
+                            "class": "MediumVoltageNetwork",
+                            "function": "supply",
+                            "usage": "supply",
+                            "transportedMedium":
                                 {
-                                    "NodeValue": nodeValue,
-                                    "nominalVoltage": {
-                                        "value": round(float(bus_elem['v_nom']), 3),
-                                        "uom": "kV"  # uom to be checked
-                                    }
-                                },
-                            "geometry":
-                                [
-                                    {
-                                        "type": "MultiPoint",
-                                        "lod": "1",
-                                        "boundaries":
-                                            [
-                                                bus_elem['geometry'].coords[0]
-                                                # to be transformed according to CityJSON specifications, with z coordinate to be added
-                                            ]
-                                    }
-                                ],
-                            "parents":
-                                [
-                                    f"featureGraph{network_elem['name']}"
-                                ]
-                        }
-                    }
-                self.un_dict.update(bus)
-
-            for l, line_elem in lines_df.iterrows():
-                if line_elem['bus0'] in buses_gdf['name'].values and line_elem['bus1'] in buses_gdf['name'].values:
-                    link = {
-                        line_elem['name'] : {
-                            "type": "+InteriorFeatureLink",
-                            "attributes":
-                                {
-                                    "start": line_elem['bus0'],
-                                    "end": line_elem['bus1'],
-                                    "kind": line_elem['kind'],
-                                    "length": {
-                                        "value": float(line_elem['length']),
-                                        "uom": "km"
-                                    },
-                                    "r": {
-                                        "value": float(line_elem['r']),
-                                        "uom": "ohm"  # uom to be checked
-                                    },
-                                    "x": {
-                                        "value": float(line_elem['x']),
-                                        "uom": "ohm"  # uom to be checked
-                                    },
-                                    "sNom": {
-                                        "value": round(float(line_elem['s_nom']), 3),
-                                        "uom": "MVA"  # uom to be checked
-                                    },
-                                    "additionalInfo": line_elem['type_info'],
-                                },
-                            "geometry":
-                                [
-                                    {
-                                        "type": "MultiLineString",
-                                        "lod": "1",
-                                        "boundaries":
-                                            [
-                                                [
-                                                    buses_gdf[buses_gdf['name'] == line_elem['bus0']]['geometry'].iloc[0].coords[0],
-                                                    buses_gdf[buses_gdf['name'] == line_elem['bus1']]['geometry'].iloc[0].coords[0],
-                                                ]
-                                            ]
-                                    }
-                                ],
-                            "parents":
-                                [
-                                    f"featureGraph{network_elem['name']}"
-                                ]
-                        }
-                    }
-                    self.un_dict.update(link)
-
-            for ld, load_elem in loads_df.iterrows():
-                if load_elem['bus'] in buses_gdf['name'].values:
-                    load = {
-                        load_elem['name']: {
-                            "type": "+AbstractNetworkFeature",
-                            "attributes":
-                                {
-                                    "function": "disposal",
-                                    "usage": "disposal",
-                                    "bus": load_elem['bus'],
-                                    "peakLoad": {
-                                        "value": round(float(load_elem['peak_load']), 3),
-                                        "uom": "MW"  # uom to be checked
-                                    },
-                                    "annualConsumption": {
-                                        "value": round(float(load_elem['annual_consumption']), 3),
-                                        "uom": "kWh"  # uom to be checked
-                                    },
-                                    "sector": load_elem['sector']
+                                    "type": "+AbstractCommodity"
                                 }
                         }
-                    }
-                    self.un_dict.update(load)
+                }
+        }
+        self.un_dict.update(network)
 
-            for g, gen_elem in generators_df.iterrows():
-                if gen_elem['bus'] in buses_gdf['name'].values:
-                    generator = {
-                        gen_elem['name']: {
-                            "type": "+AbstractNetworkFeature",
-                            "attributes": {
-                                "function": "supply",
-                                "usage": "supply",
-                                "bus": gen_elem['bus'],
-                                "control": gen_elem['control'],
-                                "pNom": {
-                                    "value": float(gen_elem['p_nom']),
-                                    "uom": "MVA"  # uom to be checked
+        featureNetwork = {
+            f"featureGraph{self.city}": {
+                "type": "+FeatureGraph",
+                "attributes":
+                    {
+                        "node": list(buses_gdf['name']),
+                        "interiorFeatureLink": list(lines_gdf['name'])
+                    },
+                "children": list(buses_gdf['name']) + list(lines_gdf['name'])
+            }
+        }
+
+        self.un_dict.update(featureNetwork)
+
+        for b, bus_elem in buses_gdf.iterrows():
+            nodeValue = "exterior"
+
+            bus = {
+                bus_elem['name']: {
+                        "type": "+Node",
+                        "attributes":
+                            {
+                                "NodeValue": nodeValue,
+                                "nominalVoltage": {
+                                    "value": round(float(bus_elem['vn_kv']), 3),
+                                    "uom": "kV"  # uom to be checked
+                                }
+                            },
+                        "geometry":
+                            [
+                                {
+                                    "type": "MultiPoint",
+                                    "lod": "1",
+                                    "boundaries":
+                                        [
+                                            bus_elem['geometry'].coords[0]
+                                        ]
+                                }
+                            ],
+                        "parents":
+                            [
+                                f"featureGraph{self.city}"
+                            ]
+                    }
+                }
+            self.un_dict.update(bus)
+
+        for l, line_elem in lines_gdf.iterrows():
+            if int(line_elem['from_bus']) in buses_gdf.index and int(line_elem['to_bus']) in buses_gdf.index:
+                link = {
+                    line_elem['name'] : {
+                        "type": "+InteriorFeatureLink",
+                        "attributes":
+                            {
+                                "start": buses_gdf['name'].iloc[int(line_elem['from_bus'])],
+                                "end": buses_gdf['name'].iloc[int(line_elem['to_bus'])],
+                                "length": {
+                                    "value": round(float(line_elem['length_km_RNM']), 3),
+                                    "uom": "km"
                                 },
-                                "type": gen_elem['type'],
-                                "subtype": gen_elem['subtype']
-                            }
-                        }
-                    }
-                    self.un_dict.update(generator)
-
-            for s, switch_elem in switches_df.iterrows():
-                if switch_elem['bus_closed'] in buses_gdf['name'].values and switch_elem['bus_open'] in buses_gdf['name'].values:
-                    switch = {
-                        switch_elem['name']: {
-                            "type": "+AbstractNetworkFeature",
-                            "attributes": {
-                                "busClosed": switch_elem['bus_closed'],
-                                "busOpen": switch_elem['bus_open'],
-                                "branch": switch_elem['branch'],
-                                "type": switch_elem['type_info'],
-                            }
-                        }
-                    }
-                    self.un_dict.update(switch)
-
-            for tr, transform_elem in transformers_df.iterrows():
-                if transform_elem['bus0'] in buses_gdf['name'].values and transform_elem['bus1'] in buses_gdf['name'].values:
-                    transformer = {
-                        transform_elem['name']: {
-                            "type": "+AbstractNetworkFeature",
-                            "attributes": {
-                                "sourceBus": transform_elem['bus0'],
-                                "endBus": transform_elem['bus1'],
                                 "r": {
-                                    "value": float(transform_elem['r']),
-                                    "uom": "ohm"  # uom to be checked
+                                    "value": float(line_elem['r_ohm_per_km']),
+                                    "uom": "ohm/km"
                                 },
                                 "x": {
-                                    "value": float(transform_elem['x']),
-                                    "uom": "ohm"  # uom to be checked
+                                    "value": float(line_elem['x_ohm_per_km']),
+                                    "uom": "ohm/km"
                                 },
-                                "sNom": {
-                                    "value": round(float(transform_elem['s_nom']), 3),
-                                    "uom": "MVA"  # uom to be checked
+                                "c": {
+                                    "value": float(line_elem['c_nf_per_km'] * 1000),
+                                    "uom": "pF/km"
                                 },
-                                "additionalInfo": transform_elem['type_info'],
-                            }
-                        }
+                                "g" : {
+                                    "value": float(line_elem['g_us_per_km'] * 1000),
+                                    "uom": "nS/km"
+                                },
+                                "iMax": {
+                                    "value": float(line_elem['max_i_ka']),
+                                    "uom": "kA"
+                                },
+                                "disconnectFrequency": {
+                                    "value": float(line_elem['df']),
+                                    "uom": "Hz"
+                                },
+                                "maximumLoadingPercent": int(line_elem['max_loading_percent']),
+                                "inService": bool(line_elem['in_service'])
+                            },
+                        "geometry":
+                            [
+                                {
+                                    "type": "MultiLineString",
+                                    "lod": "1",
+                                    "boundaries":
+                                        [
+                                            list(line_elem['geometry'].coords)
+                                        ]
+                                }
+                            ],
+                        "parents":
+                            [
+                                f"featureGraph{self.city}"
+                            ]
                     }
-                    self.un_dict.update(transformer)
+                }
+                self.un_dict.update(link)
 
-            for trHVMV, transform_hvmv_elem in transformers_hvmv_df.iterrows():
-                if transform_hvmv_elem['bus1'] in buses_gdf['name'].values:
-                    transformer_hvmv = {
-                        transform_hvmv_elem['name']: {
-                            "type": "+AbstractNetworkFeature",
-                            "attributes": {
-                                "type": transform_hvmv_elem['type'],
-                                "sourceBus": transform_hvmv_elem['bus0'],
-                                "endBus": transform_hvmv_elem['bus1'],
-                                "sNom": {
-                                    "value": round(float(transform_hvmv_elem['s_nom']), 3),
-                                    "uom": "MVA"  # uom to be checked
+        for ld, load_elem in loads_gdf.iterrows():
+            if int(load_elem['bus']) in buses_gdf.index:
+                load = {
+                    f"load{load_elem.index + 1}": {
+                        "type": "+AbstractNetworkFeature",
+                        "attributes":
+                            {
+                                "function": "disposal",
+                                "usage": "disposal",
+                                "bus": buses_gdf['name'].iloc[int(load_elem['bus'])],
+                                "activePower": {
+                                    "value": float(load_elem['p_mw']),
+                                    "uom": "MW"
                                 },
-                                "additionalInfo": transform_hvmv_elem['type_info'],
-                            }
+                                "reactivePower": {
+                                    "value": float(load_elem['q_mvar']),
+                                    "uom": "MVAR"
+                                },
+                                "totalPower": {
+                                    "value": int(load_elem['kW']),
+                                    "uom": "kW"
+                                },
+                                "constantZPercent": int(load_elem['const_z_percent']),
+                                "constantIPercent": int(load_elem['const_i_percent']),
+                                "lvPods": int(load_elem['LV_pods']),
+                                "type": load_elem['type'],
+                                "controllable": bool(load_elem['controllable']),
+                                "inService": bool(load_elem['in_service']),
+                                "buildings": load_associations[load_elem.index + 1]
+                            },
+                        "geometry":
+                            [
+                                {
+                                    "type": "MultiPoint",
+                                    "lod": "1",
+                                    "boundaries":
+                                        [
+                                            load_elem['geometry'].coords[0]
+                                        ]
+                                }
+                            ]
+                    }
+                }
+                self.un_dict.update(load)
+
+        for g, gen_elem in gens_gdf.iterrows():
+            if gen_elem['bus'] in buses_gdf.index:
+                generator = {
+                    f"generator{gen_elem.index + 1}": {
+                        "type": "+AbstractNetworkFeature",
+                        "attributes": {
+                            "function": "supply",
+                            "usage": "supply",
+                            "bus": buses_gdf['name'].iloc[int(gen_elem['from_bus'])],
+                            "activePower": {
+                                "value": float(gen_elem['p_mw']),
+                                "uom": "MW"
+                            },
+                            "reactivePower": {
+                                "value": float(gen_elem['q_mvar']),
+                                "uom": "MVAR"
+                            },
+                            "apparentNominalPower": {
+                                "value": float(gen_elem['sn_mva']),
+                                "uom": "MVA"
+                            },
+                            "type": gen_elem['type'],
+                            "currentSource": bool(gen_elem['current_source']),
+                            "controllable": bool(gen_elem['controllable']),
+                            "inService": bool(gen_elem['in_service'])
+                        },
+                        "geometry":
+                            [
+                                {
+                                    "type": "MultiPoint",
+                                    "lod": "1",
+                                    "boundaries":
+                                        [
+                                            gen_elem['geometry'].coords[0]
+                                        ]
+                                }
+                            ]
+                    }
+                }
+                self.un_dict.update(generator)
+
+        for s, switch_elem in switches_df.iterrows():
+            if int(switch_elem['bus']) in buses_gdf.index and int(switch_elem['element']) in buses_gdf.index:
+                switch = {
+                    switch_elem['name']: {
+                        "type": "+InterFeatureLink",
+                        "attributes": {
+                            "InterFeatureLinkValue": "connects",
+                            "busClosed": buses_gdf['name'].iloc[int(switch_elem['bus'])],
+                            "busOpen": buses_gdf['name'].iloc[int(switch_elem['element'])],
+                            "type": switch_elem['type'],
+                            "isClosed": bool(switch_elem['closed'])
                         }
                     }
-                    self.un_dict.update(transformer_hvmv)
+                }
+                self.un_dict.update(switch)
+
+        for tr, transform_elem in trans_gdf.iterrows():
+            if transform_elem['hv_bus'] in buses_gdf.index and transform_elem['lv_bus'] in buses_gdf.index:
+                transformer = {
+                    f"transformer{transform_elem.index + 1}": {
+                        "type": "+AbstractNetworkFeature",
+                        "attributes": {
+                            "hvBus": buses_gdf['name'].iloc[int(transform_elem['hv_bus'])],
+                            "lvBus": buses_gdf['name'].iloc[int(transform_elem['hv_bus'])],
+                            "nominalVoltageHvBus": {
+                                "value": float(transform_elem['vn_hv_kv']),
+                                "uom": "kV"
+                            },
+                            "nominalVoltageLvBus": {
+                                "value": float(transform_elem['vn_lv_kv']),
+                                "uom": "kV"
+                            },
+                            "noLoadActivePowerLoss": {
+                                "value": float(transform_elem['pfe_kw']),
+                                "uom": "kW"
+                            },
+                            "disconnectFrequency": {
+                                "value": float(transform_elem['df']),
+                                "uom": "Hz"
+                            },
+                            "nominalVoltagePercent": int(transform_elem['vk_percent']),
+                            "nominalNoLoadVoltagePercent": round(float(transform_elem['vkr_percent']), 2),
+                            "maximumLoadingPercent": int(transform_elem['max_loading_percent']),
+                            "tapStepPercent": float(transform_elem['tap_step_percent']),
+                            "tapPosition": str(transform_elem['tap_pos']),
+                            "tapPhaseShifter": bool(transform_elem['tap_phase_shifter']),
+                            "onLoadTapChanger": bool(transform_elem['oltc']),
+                            "inService": bool(transform_elem['in_service']),
+                        },
+                        "geometry":
+                            [
+                                {
+                                    "type": "MultiPoint",
+                                    "lod": "1",
+                                    "boundaries":
+                                        [
+                                            transform_elem['geometry'].coords[0]
+                                        ]
+                                }
+                            ]
+                    }
+                }
+                self.un_dict.update(transformer)
+
 
         for key, inner_dict in self.un_dict.items():
              for inner_key, dict_value in inner_dict.items():

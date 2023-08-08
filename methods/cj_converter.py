@@ -275,6 +275,15 @@ class CityJSONCreator(JSON_Writer):
                         # to be defined what it should be done in case of different objects geometry type
                         pass
 
+                if 'buildings' in value['attributes']:
+                    buildings_list = value['attributes']['buildings']
+                    for cj_obj_key, cj_obj_val in self.cityjson_data["CityObjects"].items():
+                        if cj_obj_key in buildings_list:
+                            parents = {
+                                "load": [key]
+                            }
+                            self.cityjson_data["CityObjects"][cj_obj_key]['attributes'].update(parents)
+
 
         for v in range(len(self.cityjson_data["vertices"])):
             self.cityjson_data["vertices"][v] = list(self.cityjson_data["vertices"][v])
