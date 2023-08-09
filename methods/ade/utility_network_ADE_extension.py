@@ -1,9 +1,9 @@
 import pandas as pd
 import geopandas as gpd
+import matplotlib.pyplot as plt
 import numpy as np
 import pandapower as pp
 import requests
-import shapely.wkt
 import time
 from shapely.geometry import Point, Polygon, MultiPolygon, LineString
 from pyproj import Transformer
@@ -11,25 +11,22 @@ from pyproj import Transformer
 
 class UtilityNetworkADE:
 
-    def __init__(self, path, crs, zone, city, h_slm, bounding_box, buildings_gdf):
-        self.path = path
-        self.crs = crs
-        self.zone = zone
-        self.city = city
-        self.h_slm = h_slm
-        self.bounding_box = bounding_box
+    def __init__(self, buildings_gdf):
         self.buildings_gdf = buildings_gdf
         self.network = {}
         self.un_dict = {}
+        self.un_gdf_list = []
+        self.un_elems_labels = []
+        self.colors = []
 
-    def load_pp(self):
-        network = pp.from_pickle(self.path)
+    def load_pp(self, path):
+        network = pp.from_pickle(path)
         # clean empty dfs
         self.network = {dataframe_name: dataframe for dataframe_name, dataframe in network.items() if not isinstance(dataframe, pd.DataFrame) or not dataframe.empty}
         return self.network
 
-    def geometric_operations(self):
-        self.network = self.load_pp()
+    def geometric_operations(self, path, crs, zone, bounding_box):
+        self.network = self.load_pp(path)
         # network_df = self.network['ext_grid']
         buses_df = self.network['bus']
         loads_df = self.network['load']
@@ -50,7 +47,7 @@ class UtilityNetworkADE:
 
         # multiply gdf coords
         factor = 1000
-        src_crs = f"EPSG:326{self.zone}"
+        src_crs = f"EPSG:326{zone}"
         buses_gdf['geometry'] = buses_gdf['geometry'].apply(lambda point: multiply_coordinates(point, factor))
 
         buses_gdf = buses_gdf.set_crs(src_crs)
@@ -58,23 +55,23 @@ class UtilityNetworkADE:
         gens_gdf = gens_gdf.set_crs(src_crs)
         trans_gdf = trans_gdf.set_crs(src_crs)
 
-        buses_gdf = buses_gdf.to_crs(self.crs)
-        loads_gdf = loads_gdf.to_crs(self.crs)
-        gens_gdf = gens_gdf.to_crs(self.crs)
-        trans_gdf = trans_gdf.to_crs(self.crs)
+        buses_gdf = buses_gdf.to_crs(crs)
+        loads_gdf = loads_gdf.to_crs(crs)
+        gens_gdf = gens_gdf.to_crs(crs)
+        trans_gdf = trans_gdf.to_crs(crs)
 
-        transformer = Transformer.from_crs(src_crs, self.crs, always_xy=True)
+        transformer = Transformer.from_crs(src_crs, crs, always_xy=True)
 
         def transform_coordinates(coord_list):
             transformed_coords = [transformer.transform(x, y) for x, y in coord_list]
             return LineString(transformed_coords)
 
         lines_df['geometry'] = lines_df['coordinates'].apply(transform_coordinates)
-        lines_gdf = gpd.GeoDataFrame(lines_df, geometry='geometry', crs=self.crs)
+        lines_gdf = gpd.GeoDataFrame(lines_df, geometry='geometry', crs=crs)
         lines_gdf = lines_gdf.drop(columns=['coordinates'])
 
-        def filter_by_bbox(gdf):
-            min_lon, min_lat, max_lon, max_lat, min_z, max_z = self.bounding_box
+        def filter_by_bbox(gdf, bounding_box):
+            min_lon, min_lat, max_lon, max_lat, min_z, max_z = bounding_box
 
             bbox = Polygon([(min_lon, min_lat), (max_lon, min_lat), (max_lon, max_lat), (min_lon, max_lat)])
 
@@ -82,17 +79,17 @@ class UtilityNetworkADE:
 
             return intersected
 
-        buses_gdf = filter_by_bbox(buses_gdf)
-        loads_gdf = filter_by_bbox(loads_gdf)
-        gens_gdf = filter_by_bbox(gens_gdf)
-        trans_gdf = filter_by_bbox(trans_gdf)
-        lines_gdf = filter_by_bbox(lines_gdf)
+        buses_gdf = filter_by_bbox(buses_gdf, bounding_box)
+        loads_gdf = filter_by_bbox(loads_gdf, bounding_box)
+        gens_gdf = filter_by_bbox(gens_gdf, bounding_box)
+        trans_gdf = filter_by_bbox(trans_gdf, bounding_box)
+        lines_gdf = filter_by_bbox(lines_gdf, bounding_box)
 
         return buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df
 
-    def get_elevations(self, gdf, max_retry, delay):
+    def get_elevations(self, gdf, h_slm, max_retry, delay):
         points = [(elem['geometry']) for _, elem in gdf.iterrows()]
-        elevs = self.send_get_or_post_request(points, max_retry, delay)
+        elevs = self.send_get_or_post_request(points, h_slm, max_retry, delay)
 
         updated_geometries = []
         for geom, elev in zip(gdf['geometry'], elevs):
@@ -111,7 +108,7 @@ class UtilityNetworkADE:
         gdf['geometry'] = updated_geometries
         return gdf
 
-    def send_get_or_post_request(self, points, max_retry, delay):
+    def send_get_or_post_request(self, points, h_slm, max_retry, delay):
         url = "https://api.open-elevation.com/api/v1/lookup"
         batch_size = 100  # number of points to send in each POST request
         elevations = [np.nan] * len(points)  # initialize with NaNs
@@ -133,7 +130,7 @@ class UtilityNetworkADE:
                 break
 
         # filling remaining missing values with default values
-        elevations = [e if not np.isnan(e) else self.h_slm for e in elevations]
+        elevations = [e if not np.isnan(e) else h_slm for e in elevations]
 
         return elevations
 
@@ -215,18 +212,23 @@ class UtilityNetworkADE:
 
         return load_associations
 
-    def map_ext(self):
-        buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df = self.geometric_operations()
-        buses_gdf = self.get_elevations(buses_gdf, max_retry=10, delay=0.5)
-        loads_gdf = self.get_elevations(loads_gdf, max_retry=10, delay=0.5)
-        gens_gdf = self.get_elevations(gens_gdf, max_retry=10, delay=0.5)
-        trans_gdf = self.get_elevations(trans_gdf, max_retry=10, delay=0.5)
-        lines_gdf = self.get_elevations(lines_gdf, max_retry=10, delay=0.5)
+    def map_ext(self, path, crs, zone, city, h_slm, bounding_box, lod):
+        buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df = self.geometric_operations(path, crs, zone, bounding_box)
+        buses_gdf = self.get_elevations(buses_gdf, h_slm, max_retry=10, delay=0.5)
+        loads_gdf = self.get_elevations(loads_gdf, h_slm, max_retry=10, delay=0.5)
+        gens_gdf = self.get_elevations(gens_gdf, h_slm, max_retry=10, delay=0.5)
+        trans_gdf = self.get_elevations(trans_gdf, h_slm, max_retry=10, delay=0.5)
+        lines_gdf = self.get_elevations(lines_gdf, h_slm, max_retry=10, delay=0.5)
 
         load_associations = self.associate_buildings_to_loads(self.buildings_gdf, loads_gdf)
 
+        # for plotting purposes
+        self.un_gdf_list = [buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf]
+        self.un_elems_labels = ['buses', 'loads', 'generators', 'transformers', 'lines']
+        self.colors = ['red', 'green', 'purple', 'orange', 'brown']
+
         network = {
-            f"mvGrid{self.city}":
+            f"mvGrid{city}":
                 {
                     "type": "+Network",
                     "attributes":
@@ -244,14 +246,14 @@ class UtilityNetworkADE:
         self.un_dict.update(network)
 
         featureNetwork = {
-            f"featureGraph{self.city}": {
+            f"featureGraph{city}": {
                 "type": "+FeatureGraph",
                 "attributes":
                     {
                         "node": list(buses_gdf['name']),
-                        "interiorFeatureLink": list(lines_gdf['name'])
+                        "interiorFeatureLink": lines_gdf.loc[(lines_gdf['from_bus'].astype(int).isin(buses_gdf.index)) & (lines_gdf['to_bus'].astype(int).isin(buses_gdf.index)), 'name'].tolist()
                     },
-                "children": list(buses_gdf['name']) + list(lines_gdf['name'])
+                "children": list(buses_gdf['name']) + lines_gdf.loc[(lines_gdf['from_bus'].astype(int).isin(buses_gdf.index)) & (lines_gdf['to_bus'].astype(int).isin(buses_gdf.index)), 'name'].tolist()
             }
         }
 
@@ -275,7 +277,7 @@ class UtilityNetworkADE:
                             [
                                 {
                                     "type": "MultiPoint",
-                                    "lod": "1",
+                                    "lod": lod,
                                     "boundaries":
                                         [
                                             bus_elem['geometry'].coords[0]
@@ -284,7 +286,7 @@ class UtilityNetworkADE:
                             ],
                         "parents":
                             [
-                                f"featureGraph{self.city}"
+                                f"featureGraph{city}"
                             ]
                     }
                 }
@@ -297,8 +299,8 @@ class UtilityNetworkADE:
                         "type": "+InteriorFeatureLink",
                         "attributes":
                             {
-                                "start": buses_gdf['name'].iloc[int(line_elem['from_bus'])],
-                                "end": buses_gdf['name'].iloc[int(line_elem['to_bus'])],
+                                "start": buses_gdf.loc[int(line_elem['from_bus']), 'name'],
+                                "end": buses_gdf.loc[int(line_elem['to_bus']), 'name'],
                                 "length": {
                                     "value": round(float(line_elem['length_km_RNM']), 3),
                                     "uom": "km"
@@ -334,7 +336,7 @@ class UtilityNetworkADE:
                             [
                                 {
                                     "type": "MultiLineString",
-                                    "lod": "1",
+                                    "lod": lod,
                                     "boundaries":
                                         [
                                             list(line_elem['geometry'].coords)
@@ -343,7 +345,7 @@ class UtilityNetworkADE:
                             ],
                         "parents":
                             [
-                                f"featureGraph{self.city}"
+                                f"featureGraph{city}"
                             ]
                     }
                 }
@@ -352,13 +354,13 @@ class UtilityNetworkADE:
         for ld, load_elem in loads_gdf.iterrows():
             if int(load_elem['bus']) in buses_gdf.index:
                 load = {
-                    f"load{load_elem.index + 1}": {
+                    f"load{ld + 1}": {
                         "type": "+AbstractNetworkFeature",
                         "attributes":
                             {
                                 "function": "disposal",
                                 "usage": "disposal",
-                                "bus": buses_gdf['name'].iloc[int(load_elem['bus'])],
+                                "bus": buses_gdf.loc[int(load_elem['bus']), 'name'],
                                 "activePower": {
                                     "value": float(load_elem['p_mw']),
                                     "uom": "MW"
@@ -377,13 +379,13 @@ class UtilityNetworkADE:
                                 "type": load_elem['type'],
                                 "controllable": bool(load_elem['controllable']),
                                 "inService": bool(load_elem['in_service']),
-                                "buildings": load_associations[load_elem.index + 1]
+                                "buildings": load_associations[ld + 1]
                             },
                         "geometry":
                             [
                                 {
                                     "type": "MultiPoint",
-                                    "lod": "1",
+                                    "lod": lod,
                                     "boundaries":
                                         [
                                             load_elem['geometry'].coords[0]
@@ -397,12 +399,12 @@ class UtilityNetworkADE:
         for g, gen_elem in gens_gdf.iterrows():
             if gen_elem['bus'] in buses_gdf.index:
                 generator = {
-                    f"generator{gen_elem.index + 1}": {
+                    f"generator{g + 1}": {
                         "type": "+AbstractNetworkFeature",
                         "attributes": {
                             "function": "supply",
                             "usage": "supply",
-                            "bus": buses_gdf['name'].iloc[int(gen_elem['from_bus'])],
+                            "bus": buses_gdf.loc[int(gen_elem['bus']), 'name'],
                             "activePower": {
                                 "value": float(gen_elem['p_mw']),
                                 "uom": "MW"
@@ -424,7 +426,7 @@ class UtilityNetworkADE:
                             [
                                 {
                                     "type": "MultiPoint",
-                                    "lod": "1",
+                                    "lod": lod,
                                     "boundaries":
                                         [
                                             gen_elem['geometry'].coords[0]
@@ -442,8 +444,8 @@ class UtilityNetworkADE:
                         "type": "+InterFeatureLink",
                         "attributes": {
                             "InterFeatureLinkValue": "connects",
-                            "busClosed": buses_gdf['name'].iloc[int(switch_elem['bus'])],
-                            "busOpen": buses_gdf['name'].iloc[int(switch_elem['element'])],
+                            "busClosed": buses_gdf.loc[int(switch_elem['bus']), 'name'],
+                            "busOpen": buses_gdf.loc[int(switch_elem['element']), 'name'],
                             "type": switch_elem['type'],
                             "isClosed": bool(switch_elem['closed'])
                         }
@@ -454,11 +456,11 @@ class UtilityNetworkADE:
         for tr, transform_elem in trans_gdf.iterrows():
             if transform_elem['hv_bus'] in buses_gdf.index and transform_elem['lv_bus'] in buses_gdf.index:
                 transformer = {
-                    f"transformer{transform_elem.index + 1}": {
+                    f"transformer{tr + 1}": {
                         "type": "+AbstractNetworkFeature",
                         "attributes": {
-                            "hvBus": buses_gdf['name'].iloc[int(transform_elem['hv_bus'])],
-                            "lvBus": buses_gdf['name'].iloc[int(transform_elem['hv_bus'])],
+                            "hvBus": buses_gdf.loc[int(transform_elem['hv_bus']), 'name'],
+                            "lvBus": buses_gdf.loc[int(transform_elem['hv_bus']), 'name'],
                             "nominalVoltageHvBus": {
                                 "value": float(transform_elem['vn_hv_kv']),
                                 "uom": "kV"
@@ -488,7 +490,7 @@ class UtilityNetworkADE:
                             [
                                 {
                                     "type": "MultiPoint",
-                                    "lod": "1",
+                                    "lod": lod,
                                     "boundaries":
                                         [
                                             transform_elem['geometry'].coords[0]
@@ -512,3 +514,25 @@ class UtilityNetworkADE:
 
 
         return self.un_dict
+
+    def plot_city_map(self, city):
+        fig, ax = plt.subplots(figsize=(10, 10))
+
+        self.buildings_gdf.plot(ax=ax, color='blue', edgecolor='black', label='buildings', aspect=1)
+
+        for un_gdf, color, label in zip(self.un_gdf_list, self.colors, self.un_elems_labels):
+            un_gdf.plot(ax=ax, color=color, linewidth=2, label=label, aspect=1)
+
+        plt.title(f"Buildings and Utility Network {city}")
+        plt.xlabel("Longitude")
+        plt.ylabel("Latitude")
+
+        ax.legend()
+
+        plt.savefig(f"output/{city}_buildings_utility_network.png")
+
+        plt.show()
+
+
+
+

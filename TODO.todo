@@ -1,9 +1,6 @@
 TODO ENTRO 23/08:
-1) Adattare Energy ADE alle specifiche dell'UML:
-Mappare BuildingPhysics, EnergySystem, Material e Occupants o sottoforma di extraCityObjects;
-2) Fare diagramma su struttura della pipeline;
-3) Mappare rete di distribuzione Torino e creare relazione bus:buildings (1:n);
-4) Plottare Utility Network;
-5) Documentare Energy e Utility Network extensions;
+1) Fare diagramma su struttura della pipeline;
+2) Documentare Energy e Utility Network extensions;
+3) Commentare codice e controllare documentazione pipeline.
 
 COPIARE TUTTE LE MODIFICHE NELLA CARTELLA C:\Users\Utente\OneDrive - Politecnico di Torino\Laurea Magistrale\thesis_local_backup

@@ -44,6 +44,7 @@ A virtual environment creation is strongly suggested. The needed packages are:
 chardet
 geopy
 geopandas
+matplotlib
 openpyxl
 osmnx
 pandapower

@@ -219,10 +219,11 @@ class CityJSONCreator(JSON_Writer):
             #     building["attributes"][f"+{list(ext_name[i].keys())[0]}"] = ext[i][index]
 
             # part of the code specific for energy extension integration
-            if building["geometry"][0]["type"] == "Solid":
-                building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0]) # default value
-            else:
-                building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0][0])  # default value
+            if len(ext_bld) > 0:
+                if building["geometry"][0]["type"] == "Solid":
+                     building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0])  # default value
+                else:
+                     building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0][0])  # default value
 
             # add building object to CityObjects dict
             self.cityjson_data["CityObjects"][f"building{index + 1}"] = building

@@ -10,10 +10,11 @@ from pyproj import Transformer
 
 class UtilityNetworkADE:
 
-    def __init__(self, path, crs, h_slm):
+    def __init__(self, path, crs, h_slm, lod):
         self.path = path
         self.crs = crs
         self.h_slm = h_slm
+        self.lod = lod
         self.dataframe_dict = {}
         self.un_dict = {}
 
@@ -170,9 +171,9 @@ class UtilityNetworkADE:
                     "attributes":
                         {
                             "node": list(buses_gdf['name']),
-                            "interiorFeatureLink": list(lines_df['name'])
+                            "interiorFeatureLink": lines_df.loc[(lines_df['bus0'].astype(int).isin(buses_gdf.index)) & (lines_df['bus1'].astype(int).isin(buses_gdf.index)), 'name'].tolist()
                         },
-                    "children": list(buses_gdf['name']) + list(lines_df['name'])
+                    "children": list(buses_gdf['name']) + lines_df.loc[(lines_df['bus0'].astype(int).isin(buses_gdf.index)) & (lines_df['bus1'].astype(int).isin(buses_gdf.index)), 'name'].tolist()
                 }
             }
 
@@ -200,7 +201,7 @@ class UtilityNetworkADE:
                                 [
                                     {
                                         "type": "MultiPoint",
-                                        "lod": "1",
+                                        "lod": self.lod,
                                         "boundaries":
                                             [
                                                 bus_elem['geometry'].coords[0]
@@ -248,7 +249,7 @@ class UtilityNetworkADE:
                                 [
                                     {
                                         "type": "MultiLineString",
-                                        "lod": "1",
+                                        "lod": self.lod,
                                         "boundaries":
                                             [
                                                 [

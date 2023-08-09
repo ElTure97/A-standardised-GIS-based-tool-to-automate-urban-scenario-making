@@ -55,14 +55,16 @@ energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisitio
 ext_bld_list.append(energy_bld_ext)
 
 # ding0_path = f"utility/ding0-output/{MV_district}/*.csv"
-# un_ADE = UtilityNetworkADE(ding0_path, crs, h_slm)
+# un_ADE = UtilityNetworkADE(ding0_path, crs, h_slm, lod)
 
-un_ADE = UtilityNetworkADE(pp_path, crs, UTM_zone, city, h_slm, bbox, gdf)
+un_ADE = UtilityNetworkADE(gdf)
 
-utility_network_ext = un_ADE.map_ext()
+utility_network_ext = un_ADE.map_ext(pp_path, crs, UTM_zone, city, h_slm, bbox, lod)
+un_ADE.plot_city_map(city)
 
 ext_city_list.append(energy_city_ext)
 ext_city_list.append(utility_network_ext)
+# ades.pop(0)
 # ades.pop(-1)
 
 cj_creator = CityJSONCreator(gdf)

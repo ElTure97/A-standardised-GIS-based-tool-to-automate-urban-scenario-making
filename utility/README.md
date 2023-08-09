@@ -1,4 +1,4 @@
-For correct synthetic distribution grid generation, you need to change the virtual environment.
+For correct synthetic distribution grid generation by ding0, you need to change the virtual environment.
 The new environment must be configured for all needed packages correct installation (in order to avoid conflicts with other installed libraries).
 
 Needed environment configuration file is available on "envs_config" folder.
@@ -14,3 +14,5 @@ In the file "config/ding0_config.json", the user must respectively put:
     If multiple networks loading is required, the user is asked to modify the code for mapping the network to the output cityjson so that to be compliant with the output of multiple networks loading.
 2) Once chosen the MV_district, the user is required to also put the geometry of the multipolygon the considered MV_district is built over, by copying and pasting the value corresponding to the field "geom".
 It corresponds to a long exa-decimal string which represents a compressed form of the boundaries of the district. 
+
+Instead, if needed data for utility network mapping are already available, ignore the steps listed below.
