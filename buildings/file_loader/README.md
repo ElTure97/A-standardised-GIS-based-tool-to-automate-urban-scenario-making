@@ -1,10 +1,10 @@
 Welcome
 
-Here there are listed the step to be followed to correctly use this application.
+Here there are listed the first steps to be followed for correctly using this application.
 The configuration must be properly done only setting the value of fields in the file config/config.json:
 
 1) First, you must specify the address around which you want to build your bounding box in the following format:
-        address, CAP, City XX, Country ;
+   - address, CAP, City XX, Country ;
 2) You have also to specify the size of the bounding box by expressing the distance (in meters) from the previously specified address and the desired resolution for elevation data mapping after the bounding box has been split in a grid.;
 Please take care to adequately set the resolution since the elevation is obtained through HTTP get request to open elevation API which supports at most 512 locations per single request.
 Then the resolution according to which the bounding box is discretized, must be chosen in order to not exceed this number.
