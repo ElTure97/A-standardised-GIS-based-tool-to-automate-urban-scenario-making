@@ -7,7 +7,7 @@ The configuration must be properly done only setting the value of fields in the 
         address, CAP, City XX, Country ;
 2) You have also to specify the size of the bounding box by expressing the distance (in meters) from the previously specified address and the desired resolution for elevation data mapping after the bounding box has been split in a grid.;
 Please take care to adequately set the resolution since the elevation is obtained through HTTP get request to open elevation API which supports at most 512 locations per single request.
-Then the resolution according to which the bounding box is discretized, must be choosen in order to not exceed this number.
+Then the resolution according to which the bounding box is discretized, must be chosen in order to not exceed this number.
 3) Also, the city of interest must be specified properly filling the fields "provincia", "comune", "nation" and "h_slm" with the corresponding city height value (with respect to the sea level) as integer;
 4) Following, the fields "NUTS3" and "LAU2" must be filled respectively with strings corresponding to the metropolitan area code and the city code. 
 Check the following link for more about NUTS3 code:
@@ -38,19 +38,3 @@ Objects with different geometries would require code adaptation in the module me
 
 Census section data can be retrieved at the following link:
 https://www.istat.it/it/archivio/104317
-
-A virtual environment creation is strongly suggested. The needed packages are:
-
-chardet
-geopy
-geopandas
-matplotlib
-openpyxl
-osmnx
-pandapower
-pandas
-pyproj
-requests
-rtree
-scipy
-shapely
