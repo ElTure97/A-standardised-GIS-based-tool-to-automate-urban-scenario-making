@@ -15,24 +15,24 @@ except for the current repo, where you can find the specifications for the last 
 Please, follow them carefully for correctly obtaining the wished output.
 
 Notice that the whole pipeline has been designed for an italian study case, relying on external files to be provided.
-Especially for utility network data, just for testing purposes, the ding0 tool (https://github.com/openego/ding0) has been run over a german database, 
-but the final output relies on network data externally provided as pandapower file.
+Utility network data, just for testing purposes during development, have been achieved through the ding0 tool (https://github.com/openego/ding0) which at the time of writing works ONLY over a german database. 
+Instead, the final output relies on network data externally provided as pandapower file.
 
 A virtual environment creation is strongly suggested. The needed packages are:
 
-chardet
-geopy
-geopandas
-matplotlib
-openpyxl
-osmnx
-pandapower
-pandas
-pyproj
-requests
-rtree
-scipy
-shapely
+- chardet;
+- geopy;
+- geopandas;
+- matplotlib;
+- openpyxl;
+- osmnx;
+- pandapower;
+- pandas;
+- pyproj;
+- requests;
+- rtree;
+- scipy;
+- shapely.
 
 Feel free to use, update and add features to the developed code according to your purposes. 
 Do not hesitate in contacting us for any further clarifications.
