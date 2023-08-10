@@ -18,6 +18,7 @@ class UtilityNetworkADE:
         self.dataframe_dict = {}
         self.un_dict = {}
 
+    # DataFrames loading
     def load_csv(self):
         csv_file = glob.glob(self.path)
         for file in csv_file:
@@ -26,6 +27,7 @@ class UtilityNetworkADE:
             self.dataframe_dict[file_name] = df
         return self.dataframe_dict
 
+    # Consistency checking
     def check_crs(self):
         self.dataframe_dict = self.load_csv()
         network_df = self.dataframe_dict['network']
@@ -34,7 +36,7 @@ class UtilityNetworkADE:
         network_df = network_df.rename(columns={'mv_grid_district_geom': 'geometry'})
         network_df['geometry'] = network_df['geometry'].apply(shapely.wkt.loads)
         network_gdf = gpd.GeoDataFrame(network_df, geometry='geometry')
-        network_gdf.set_crs(epsg=network_gdf['srid'][0], inplace=True) # for single network loading
+        network_gdf.set_crs(epsg=network_gdf['srid'][0], inplace=True)  # for single network loading
         # network_gdf = network_gdf.set_geometry(network_gdf['geometry'])
 
         current_crs = network_gdf.crs
@@ -52,6 +54,7 @@ class UtilityNetworkADE:
 
         return self.dataframe_dict
 
+    # Getting elevations of network objects through APIs, set to default city height ASL in case of failed requests
     def get_elevations(self, df, max_retry, delay):
         points = []
         for i, elem in df.iterrows():
@@ -75,8 +78,7 @@ class UtilityNetworkADE:
 
         return gdf
 
-
-
+    # Sending GET request
     def send_get_request(self, df, points, url, max_retry, delay):
         retry_count = 0
         while retry_count < max_retry:
@@ -93,13 +95,15 @@ class UtilityNetworkADE:
                 retry_count += 1
                 time.sleep(delay)
 
+        # Default city height ASL values mapping in case of failed requests
         df['z'] = [self.h_slm] * len(points)
 
         return df
 
+    # Sending POST request
     def send_post_request(self, df, points, max_retry, delay):
         url = "https://api.open-elevation.com/api/v1/lookup"
-        batch_size = 100  # Number of points to send in each POST request
+        batch_size = 100
         retry_count = 0
         while retry_count < max_retry:
             for i in range(0, len(points), batch_size):
@@ -112,7 +116,7 @@ class UtilityNetworkADE:
                     print("Success!")
                     try:
                         batch_elevations = [result["elevation"] for result in response.json()["results"]]
-                        # Assign elevations to the corresponding subset of 'df'
+                        # Assign elevations to the corresponding subset of the DataFrame
                         df.loc[i:i + batch_size - 1, 'z'] = batch_elevations
                     except ValueError:
                         print("Invalid JSON response.")
@@ -127,11 +131,12 @@ class UtilityNetworkADE:
             else:
                 break
 
-        # Fill remaining missing values with default values
+        # Filling remaining missing values with default city height ASL values
         df['z'].fillna(self.h_slm, inplace=True)
 
         return df
 
+    # Mapping network data according to the Utility Network extension schema
     def map_ext(self):
         self.dataframe_dict = self.check_crs()
 
@@ -180,7 +185,6 @@ class UtilityNetworkADE:
             self.un_dict.update(featureNetwork)
 
             for b, bus_elem in buses_gdf.iterrows():
-                # if bus_elem['name'] in loads_df.loc[loads_df['sector'] == 'residential', 'bus'].values:
                 if bus_elem["in_building"]:
                     nodeValue = "interior"
                 else:
@@ -194,7 +198,7 @@ class UtilityNetworkADE:
                                     "NodeValue": nodeValue,
                                     "nominalVoltage": {
                                         "value": round(float(bus_elem['v_nom']), 3),
-                                        "uom": "kV"  # uom to be checked
+                                        "uom": "kV"
                                     }
                                 },
                             "geometry":
@@ -233,15 +237,15 @@ class UtilityNetworkADE:
                                     },
                                     "r": {
                                         "value": float(line_elem['r']),
-                                        "uom": "ohm"  # uom to be checked
+                                        "uom": "ohm"
                                     },
                                     "x": {
                                         "value": float(line_elem['x']),
-                                        "uom": "ohm"  # uom to be checked
+                                        "uom": "ohm"
                                     },
                                     "sNom": {
                                         "value": round(float(line_elem['s_nom']), 3),
-                                        "uom": "MVA"  # uom to be checked
+                                        "uom": "MVA"
                                     },
                                     "additionalInfo": line_elem['type_info'],
                                 },
@@ -279,11 +283,11 @@ class UtilityNetworkADE:
                                     "bus": load_elem['bus'],
                                     "peakLoad": {
                                         "value": round(float(load_elem['peak_load']), 3),
-                                        "uom": "MW"  # uom to be checked
+                                        "uom": "MW"
                                     },
                                     "annualConsumption": {
                                         "value": round(float(load_elem['annual_consumption']), 3),
-                                        "uom": "kWh"  # uom to be checked
+                                        "uom": "kWh"
                                     },
                                     "sector": load_elem['sector']
                                 }
@@ -303,7 +307,7 @@ class UtilityNetworkADE:
                                 "control": gen_elem['control'],
                                 "pNom": {
                                     "value": float(gen_elem['p_nom']),
-                                    "uom": "MVA"  # uom to be checked
+                                    "uom": "MVA"
                                 },
                                 "type": gen_elem['type'],
                                 "subtype": gen_elem['subtype']
@@ -337,15 +341,15 @@ class UtilityNetworkADE:
                                 "endBus": transform_elem['bus1'],
                                 "r": {
                                     "value": float(transform_elem['r']),
-                                    "uom": "ohm"  # uom to be checked
+                                    "uom": "ohm"
                                 },
                                 "x": {
                                     "value": float(transform_elem['x']),
-                                    "uom": "ohm"  # uom to be checked
+                                    "uom": "ohm"
                                 },
                                 "sNom": {
                                     "value": round(float(transform_elem['s_nom']), 3),
-                                    "uom": "MVA"  # uom to be checked
+                                    "uom": "MVA"
                                 },
                                 "additionalInfo": transform_elem['type_info'],
                             }
@@ -364,7 +368,7 @@ class UtilityNetworkADE:
                                 "endBus": transform_hvmv_elem['bus1'],
                                 "sNom": {
                                     "value": round(float(transform_hvmv_elem['s_nom']), 3),
-                                    "uom": "MVA"  # uom to be checked
+                                    "uom": "MVA"
                                 },
                                 "additionalInfo": transform_hvmv_elem['type_info'],
                             }

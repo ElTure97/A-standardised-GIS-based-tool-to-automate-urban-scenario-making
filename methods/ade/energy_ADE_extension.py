@@ -8,6 +8,7 @@ class EnergyADE:
         self.energy_ext = []
         self.energy_dict = {}
 
+    # Mapping energy data according to the Energy extension schema
     def map_ext(self, city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data):
         for idx, bld_elem in self.gdf.iterrows():
 
@@ -76,7 +77,7 @@ class EnergyADE:
                         "energy-weatherData": [
                             {
                                 "energy-weatherElement": weather_element,
-                                "energy-values": f"{measured_element}Data{city}"  # to be built
+                                "energy-values": f"{measured_element}Data{city}"
                             }
                         ],
                         "energy-energyDemand": [

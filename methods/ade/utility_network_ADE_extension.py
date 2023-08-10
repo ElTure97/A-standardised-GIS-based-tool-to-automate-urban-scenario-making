@@ -21,10 +21,11 @@ class UtilityNetworkADE:
 
     def load_pp(self, path):
         network = pp.from_pickle(path)
-        # clean empty dfs
+        # Cleaning empty DataFrames
         self.network = {dataframe_name: dataframe for dataframe_name, dataframe in network.items() if not isinstance(dataframe, pd.DataFrame) or not dataframe.empty}
         return self.network
 
+    # Specific geometric operations on loaded DataFrames for crs consistency achievement
     def geometric_operations(self, path, crs, zone, bounding_box):
         self.network = self.load_pp(path)
         # network_df = self.network['ext_grid']
@@ -40,12 +41,13 @@ class UtilityNetworkADE:
         gens_gdf = gpd.GeoDataFrame(gens_df)
         trans_gdf = gpd.GeoDataFrame(trans_df)
 
+        # Specific coordinates scaling operation
         def multiply_coordinates(point, factor):
             new_x = point.x * factor
             new_y = point.y * factor
             return Point(new_x, new_y)
 
-        # multiply gdf coords
+        # Multiply GeoDataFrame coordinates
         factor = 1000
         src_crs = f"EPSG:326{zone}"
         buses_gdf['geometry'] = buses_gdf['geometry'].apply(lambda point: multiply_coordinates(point, factor))
@@ -62,6 +64,7 @@ class UtilityNetworkADE:
 
         transformer = Transformer.from_crs(src_crs, crs, always_xy=True)
 
+        # Specific operation for from-coordinates list to-LineString geometric object conversion
         def transform_coordinates(coord_list):
             transformed_coords = [transformer.transform(x, y) for x, y in coord_list]
             return LineString(transformed_coords)
@@ -70,6 +73,7 @@ class UtilityNetworkADE:
         lines_gdf = gpd.GeoDataFrame(lines_df, geometry='geometry', crs=crs)
         lines_gdf = lines_gdf.drop(columns=['coordinates'])
 
+        # Filtering elements inside the study case bounding box
         def filter_by_bbox(gdf, bounding_box):
             min_lon, min_lat, max_lon, max_lat, min_z, max_z = bounding_box
 
@@ -87,6 +91,7 @@ class UtilityNetworkADE:
 
         return buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df
 
+    # Getting elevations of network objects through APIs, set to default city height ASL in case of failed requests
     def get_elevations(self, gdf, h_slm, max_retry, delay):
         points = [(elem['geometry']) for _, elem in gdf.iterrows()]
         elevs = self.send_get_or_post_request(points, h_slm, max_retry, delay)
@@ -102,12 +107,13 @@ class UtilityNetworkADE:
                 updated_coords = [(coord[0], coord[1], elev) for coord in coords]
                 updated_geometries.append(LineString(updated_coords))
             else:
-                # to be defined what should be done in case of different geometries
+                # To be defined what should be done in case of different geometries
                 pass
 
         gdf['geometry'] = updated_geometries
         return gdf
 
+    # Sending requests
     def send_get_or_post_request(self, points, h_slm, max_retry, delay):
         url = "https://api.open-elevation.com/api/v1/lookup"
         batch_size = 100  # number of points to send in each POST request
@@ -129,7 +135,7 @@ class UtilityNetworkADE:
             else:
                 break
 
-        # filling remaining missing values with default values
+        # Filling remaining missing values with default city height ASL values
         elevations = [e if not np.isnan(e) else h_slm for e in elevations]
 
         return elevations
@@ -147,7 +153,7 @@ class UtilityNetworkADE:
 
     def send_post_request(self, points, batch_size):
         url = "https://api.open-elevation.com/api/v1/lookup"
-        elevations = [np.nan] * len(points)  # Initialize with NaNs
+        elevations = [np.nan] * len(points)  # initialize with NaNs
 
         for i in range(0, len(points), batch_size):
             batch = points[i:i + batch_size]
@@ -169,18 +175,23 @@ class UtilityNetworkADE:
         return elevations
 
     def associate_buildings_to_loads(self, gdf, loads_gdf):
-        # projecting coordinates to cartographic for more accurate distance computation
+        # Projecting coordinates to cartographic for more accurate distance computation
         gdf = gdf.to_crs(epsg=3395)
         loads_gdf = loads_gdf.to_crs(epsg=3395)
 
         gdf['nearest_load'] = None
 
-        # neglecting z coordinate for distance computation
+        # Neglecting z coordinate for distance computation
         loads_gdf_2d = loads_gdf.copy()
         loads_gdf_2d.geometry = loads_gdf_2d.geometry.apply(lambda geom: Point(geom.x, geom.y))
 
+        # To-2D objects conversion for distance computation
         def to_2d_geometry(geometry):
-            if isinstance(geometry, Polygon):
+            if isinstance(geometry, Point):
+                # exterior_coords = [(x, y) for x, y, _ in geometry.coords]
+                # return Point(exterior_coords)
+                pass
+            elif isinstance(geometry, Polygon):
                 exterior_coords = [(x, y) for x, y, _ in geometry.exterior.coords]
                 return Polygon(exterior_coords)
             elif isinstance(geometry, MultiPolygon):
@@ -190,7 +201,7 @@ class UtilityNetworkADE:
                     polygons.append(Polygon(exterior_coords))
                 return MultiPolygon(polygons)
             else:
-                # to be defined what it should be done in case of different geometries
+                # To be defined what it should be done in case of different geometries
                 pass
 
         for building_idx, building_row in gdf.iterrows():
@@ -198,7 +209,7 @@ class UtilityNetworkADE:
 
             building_geometry_2d = to_2d_geometry(building_geometry)
 
-            # distance computation and nearest load selection
+            # Distance computation between buildings and loads for building nearest load selection
             loads_gdf_2d['distance'] = loads_gdf_2d.geometry.distance(building_geometry_2d)
             nearest_load = loads_gdf_2d['distance'].idxmin()
             loads_gdf_2d.drop(columns=['distance'], inplace=True)
@@ -212,6 +223,7 @@ class UtilityNetworkADE:
 
         return load_associations
 
+    # Mapping network data according to the Utility Network extension schema
     def map_ext(self, path, crs, zone, city, h_slm, bounding_box, lod):
         buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df = self.geometric_operations(path, crs, zone, bounding_box)
         buses_gdf = self.get_elevations(buses_gdf, h_slm, max_retry=10, delay=0.5)
@@ -222,7 +234,7 @@ class UtilityNetworkADE:
 
         load_associations = self.associate_buildings_to_loads(self.buildings_gdf, loads_gdf)
 
-        # for plotting purposes
+        # Equally-sized lists creation for plotting purposes
         self.un_gdf_list = [buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf]
         self.un_elems_labels = ['buses', 'loads', 'generators', 'transformers', 'lines']
         self.colors = ['red', 'green', 'purple', 'orange', 'brown']
@@ -501,7 +513,7 @@ class UtilityNetworkADE:
                 }
                 self.un_dict.update(transformer)
 
-
+        # None or NaN values checking and replacement
         for key, inner_dict in self.un_dict.items():
              for inner_key, dict_value in inner_dict.items():
                 if isinstance(dict_value, dict):
@@ -515,6 +527,7 @@ class UtilityNetworkADE:
 
         return self.un_dict
 
+    # Plot city map with both buildings and network elements
     def plot_city_map(self, city):
         fig, ax = plt.subplots(figsize=(10, 10))
 

@@ -1,7 +1,7 @@
 Welcome!
-This repository contains the code developed for the master thesis degree of the course ICT for Smart Societies at the Politecnico di Torino.
-The project consists of a pipeline whose main goal is the one of outputting a cityJSON file (for further conversion to CityGML) storing buildings data, compliant
-with the extensions schemas for Energy and Utility Network developed according the respective cityGML Application Domain Extensions (ADEs) specifications. 
+This repository contains the code developed for the master's thesis degree of the course ICT for Smart Societies at the Politecnico di Torino.
+The project consists of a pipeline whose main goal is to output a CityJSON file (for further conversion to CityGML) storing buildings data, compliant
+with the extensions schemas for Energy and Utility Network developed according to the respective CityGML Application Domain Extensions (ADEs) specifications. 
 
 To be started, please follow the reverse path from the inner folder ("buildings/file_loader") to the outer one.
 The scripts to be run are respectively:
@@ -10,13 +10,13 @@ The scripts to be run are respectively:
 2) buildings/main.py;
 3) to_cj.py.
 
-But first, for each one of the step listed above, the user is required to follow the configuration steps in-depth explained in the README.md file inside each working directory,
+But first, for each one of the steps listed above, the user is required to follow the configuration steps in-depth explained in the README.md file inside each working directory,
 except for the current repo, where you can find the specifications for the last configuration steps for correctly running to_cj.py in LAST_STEP.md.
 Please, follow them carefully for correctly obtaining the wished output.
 
-Notice that the whole pipeline has been designed for an italian study case, relying on external files to be provided.
-Utility network data, just for testing purposes during development, have been achieved through the ding0 tool (https://github.com/openego/ding0) which at the time of writing works ONLY over a german database. 
-Instead, the final output relies on network data externally provided as pandapower file.
+Notice that the whole pipeline has been designed for an Italian study case, relying on external files to be provided.
+Utility network data, just for testing purposes during development, have been achieved through the ding0 tool (https://github.com/openego/ding0) which at the time of writing works ONLY over a German database. 
+Instead, the final output relies on network data externally provided as PandaPower file.
 
 A virtual environment creation is strongly suggested. The needed packages are:
 

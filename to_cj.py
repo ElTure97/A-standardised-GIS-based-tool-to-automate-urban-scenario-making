@@ -5,6 +5,7 @@ from methods.ade.energy_ADE_extension import *
 # from methods.ade.utility_network_ADE_extension_for_ding0 import *
 from methods.ade.utility_network_ADE_extension import *
 
+# Loading configuration parameters
 with open("buildings/file_loader/config/config.json", "r") as f:
     config_data = json.load(f)
 app_name = config_data["application_name"]
@@ -41,19 +42,34 @@ MV_district = str(ding0_data["MV_district"])
 with open("config/weather_config.json", "r") as k:
     weather_config_data = json.load(k)
 
+''' 
+Loading buildings geodataframe: 
+the user can choose among two possible loading options 
+accordingly to the file format previously chosen in buildings\main.py:
+ 1) ShapeFile folder;
+ 2) GeoJSON data.
+ '''
 gdf = gpd.read_file(f"buildings/output/{city}_{building_target}")
-# headers = list(gdf.columns)
+# gdf = gpd.read_file(f"buildings/output/{city}_{building_target}.geojson")
 
-# create two empty lists respectively for building objects extension and for city objects extension
+# Creation of two empty lists respectively for building objects extension and for city objects extension
 ext_bld_list = []
 ext_city_list = []
 
-# further ADEs modules must be added here following the same syntax
-# pay attention to append the extension to the right list since according to that, the extension will be applied to buildings or city
+''' Further ADEs modules must be added here following the same syntax
+pay attention to append the extension to the right list since according to that, 
+the extension will be applied to buildings or city. '''
 energy_ADE_obj = EnergyADE(gdf)
 energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data)
 ext_bld_list.append(energy_bld_ext)
 
+''' 
+Loading grid data: 
+the user can choose among two possible loading options 
+accordingly to the available files:
+ 1) Ding0 output;
+ 2) PandaPower data.
+ '''
 # ding0_path = f"utility/ding0-output/{MV_district}/*.csv"
 # un_ADE = UtilityNetworkADE(ding0_path, crs, h_slm, lod)
 
@@ -64,8 +80,13 @@ un_ADE.plot_city_map(city)
 
 ext_city_list.append(energy_city_ext)
 ext_city_list.append(utility_network_ext)
+
+'''Extension removal from the ADEs list just for single extension testing purposes, if needed.
+Element 0 is the energy extension, while element -1 is the utility network one.
+In addition to that, in the previous lines, no appending must be operated. '''
 # ades.pop(0)
 # ades.pop(-1)
 
+# CityJSON writing
 cj_creator = CityJSONCreator(gdf)
 cj_creator.write_json(bbox, bounds, ades, ext_bld_list, ext_city_list, lod, crs, crs_url, UTM_zone, city, nation, building_target, nuts3, lau2)

@@ -108,7 +108,10 @@ bbox_data["bounding_box_z"] = bbox_z
 with open("bounding_box.json", "w") as out:
     json.dump(bbox_data, out, indent=4)
 
-z_gdf.to_file(f"output/{city}_{building_target}")
+filtered_z_gdf = z_gdf[z_gdf['geometry'].apply(lambda geom: isinstance(geom, (Polygon, MultiPolygon)))]
+
+filtered_z_gdf.to_file(f"output/{city}_{building_target}")
+# filtered_z_gdf.to_file(f"output/{city}_{building_target}.geojson", driver='GeoJSON')
 
 end_time = time.time()
 total_time = end_time - start_time

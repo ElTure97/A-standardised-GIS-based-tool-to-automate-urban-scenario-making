@@ -1,5 +1,6 @@
 import json
 
+# Parent class for JSON writing
 class JSON_Writer:
 
     def __init__(self, gdf):

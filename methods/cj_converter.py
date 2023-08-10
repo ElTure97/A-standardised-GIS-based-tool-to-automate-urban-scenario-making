@@ -20,6 +20,7 @@ class CityJSONCreator(JSON_Writer):
             "vertices": None
         }
 
+    # Families list per building generation
     def generate_fams_list(self, index, nuts3, lau2, building_target):
         grouped = self.gdf.groupby(self.headers[9])
         first_lett = building_target[0]
@@ -55,6 +56,7 @@ class CityJSONCreator(JSON_Writer):
                     families_sez_list.pop(-1)
         return self.fams_per_bld[index]
 
+    # Coordinates conversion to UTM
     def convert_to_utm(self, point, source_crs, zone):
         utm = Proj(proj='utm', zone=zone, ellps='WGS84', preserve_units=False, init=source_crs)
 
@@ -69,10 +71,11 @@ class CityJSONCreator(JSON_Writer):
 
         return (east, north, alt)
 
+    # Transform object creation for coordinates compression
     def create_transform_object(self, bounds):
-        # scale factors
+        # Scale factors
         scale = [0.001, 0.001, 0.001]
-        # minimum values for translation
+        # Minimum values for translation
         translate = bounds
 
         self.transform = {
@@ -82,7 +85,8 @@ class CityJSONCreator(JSON_Writer):
 
         return self.transform
 
-    def compute_no_of_accomodations(self, bld_elem):
+    # No. of accommodations per building computation under default net are per person value assumption
+    def compute_no_of_accommodations(self, bld_elem):
         no_of_people = float(bld_elem[self.headers[8]])
         no_of_fams = float(bld_elem[self.headers[7]])
         no_of_floors = int(bld_elem[self.headers[3]])
@@ -94,17 +98,21 @@ class CityJSONCreator(JSON_Writer):
             no_of_people_per_fam = no_of_people / no_of_fams
             gfa_per_fam = gfa / no_of_fams
             if gfa_per_fam / no_of_people_per_fam > min_gfa_per_pers:
-                no_of_accomodations = round(gfa / gfa_per_fam)
+                no_of_accommodations = round(gfa / gfa_per_fam)
             else:
-                no_of_accomodations = round(gfa / (min_gfa_per_pers * no_of_people_per_fam))
+                no_of_accommodations = round(gfa / (min_gfa_per_pers * no_of_people_per_fam))
         else:
-            # a correction factor is applied to take into account also not usable space
-            no_of_accomodations = round(gfa / (no_of_floors * corr_factor * min_gfa_per_pers))
+            # A correction factor is applied to take into account also the not usable space
+            no_of_accommodations = round(gfa / (no_of_floors * corr_factor * min_gfa_per_pers))
 
-        avg_area = round(((gfa - (no_of_floors * not_usable_space))/no_of_accomodations), 2)
+        if no_of_accommodations == 0:
+            no_of_accommodations = 1  # minimum value
 
-        return no_of_accomodations, avg_area
+        avg_area = round(((gfa - (no_of_floors * not_usable_space)) / no_of_accommodations), 2)
 
+        return no_of_accommodations, avg_area
+
+    # CityJSON creation
     def create_CJ(self, bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target):
         self.cityjson_data["vertices"] = []
         for index, row in self.gdf.iterrows():
@@ -145,9 +153,10 @@ class CityJSONCreator(JSON_Writer):
                     self.cityjson_data["vertices"] = self.cityjson_data["vertices"] + coords[poly]
                 geom_type = "CompositeSolid"
             else:
+                # To be defined what it should be done in case of different geometry type with respect to Point, Polygon or MultiPolygon
                 continue
-                 # to be defined what it should be done in case of different geometry type with respect to Point, Polygon or MultiPolygon
 
+            # Mapping coords to vertices list
             bound = []
             if len(coords) == 1:
                 bound.append([])
@@ -183,7 +192,7 @@ class CityJSONCreator(JSON_Writer):
                         bound[pol][0][j][0].append(current + int(len(coords[pol]) / 2))
                         i += 1
 
-            # create a dict for each building
+            # Dict object creation for each building
             building = {
                 "type": "Building",
                 "attributes": {
@@ -198,8 +207,8 @@ class CityJSONCreator(JSON_Writer):
                     "families": int(row[self.headers[7]]),
                     "familiesID": self.generate_fams_list(index, nuts3, lau2, building_target),
                     "occupants": int(row[self.headers[8]]),
-                    "accomodations": self.compute_no_of_accomodations(row)[0],
-                    "avgArea": self.compute_no_of_accomodations(row)[1],
+                    "accommodations": self.compute_no_of_accommodations(row)[0],
+                    "avgArea": self.compute_no_of_accommodations(row)[1],
                     # "tabulaBuildingType": row[self.headers[6]],
                     "tabulaTypeUID": row[self.headers[10]],
                     "POD": row[self.headers[11]]
@@ -212,20 +221,19 @@ class CityJSONCreator(JSON_Writer):
                 }]
             }
 
-            # iterate over building attributes extensions
+            # Iteration over building attributes extensions
             for i in range(len(ext_bld)):
                  building["attributes"].update(ext_bld[i][index])
 
-            #     building["attributes"][f"+{list(ext_name[i].keys())[0]}"] = ext[i][index]
 
-            # part of the code specific for energy extension integration
+            # Part of the code specific for energy extension integration if there
             if len(ext_bld) > 0:
                 if building["geometry"][0]["type"] == "Solid":
                      building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0])  # default value
                 else:
                      building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0][0])  # default value
 
-            # add building object to CityObjects dict
+            # Adding building object to CityObjects dict
             self.cityjson_data["CityObjects"][f"building{index + 1}"] = building
             print(f"Building {index + 1} succesfully added to cityjson!")
 
@@ -236,7 +244,7 @@ class CityJSONCreator(JSON_Writer):
             }
         self.cityjson_data["transform"] = self.create_transform_object(bounds)
 
-        # fill metadata
+        # Metadata filling
         lon_min, lat_min, lon_max, lat_max, z_min, z_max = bbox
         min_point = (lon_min, lat_min, z_min)
         max_point = (lon_max, lat_max, z_max)
@@ -256,10 +264,10 @@ class CityJSONCreator(JSON_Writer):
 
         self.cityjson_data["metadata"] = metadata_dict
 
-        # add city objects extensions
+        # Adding city objects extension
         for ext in ext_city:
             self.cityjson_data["CityObjects"].update(ext)
-            # part of the code to transform city objects coordinates in order to make them compliant with the cityjson specifications
+            # Part of the code to transform city objects coordinates in order to make them compliant with the CityJSON specifications
             for key, value in ext.items():
                 if 'geometry' in value:
                     geom = value['geometry'][0]
@@ -273,7 +281,7 @@ class CityJSONCreator(JSON_Writer):
                                 self.cityjson_data["vertices"].append(geom["boundaries"][0][b])
                             geom["boundaries"][0][b] = self.cityjson_data["vertices"].index(geom["boundaries"][0][b])
                     else:
-                        # to be defined what it should be done in case of different objects geometry type
+                        # To be defined what it should be done in case of different objects geometry type
                         pass
 
                 if 'buildings' in value['attributes']:
@@ -285,7 +293,7 @@ class CityJSONCreator(JSON_Writer):
                             }
                             self.cityjson_data["CityObjects"][cj_obj_key]['attributes'].update(parents)
 
-
+        # Vertices compression
         for v in range(len(self.cityjson_data["vertices"])):
             self.cityjson_data["vertices"][v] = list(self.cityjson_data["vertices"][v])
             for i in range(len(self.cityjson_data["vertices"][v])):
@@ -296,6 +304,7 @@ class CityJSONCreator(JSON_Writer):
 
         return self.cityjson_data
 
+    # JSON writing
     def write_json(self, bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, building_target, nuts3, lau2):
         path = f"output/{city}_{building_target}.json"
         super().write_json(path, self.create_CJ(bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target))
