@@ -10,8 +10,7 @@ The scripts to be run are respectively:
 2) buildings/main.py;
 3) to_cj.py.
 
-But first, for each one of the steps listed above, the user is required to follow the configuration steps in-depth explained in the README.md file inside each working directory,
-except for the current repo, where you can find the specifications for the last configuration steps for correctly running to_cj.py in LAST_STEP.md.
+But first, for each one of the steps listed above, the user is required to follow the configuration steps in-depth explained in the corresponding .md file inside each working directory.
 Please, follow them carefully for correctly obtaining the wished output.
 
 Notice that the whole pipeline has been designed for an Italian study case, relying on external files to be provided.
