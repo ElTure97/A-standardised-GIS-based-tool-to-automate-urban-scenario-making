@@ -34,5 +34,5 @@ A virtual environment creation is strongly suggested. The needed packages are:
 - shapely.
 
 Feel free to use, update and add features to the developed code according to your purposes. 
-Do not hesitate in contacting us for any further clarifications.
+Do not hesitate in contacting us for any further clarifications!
 
