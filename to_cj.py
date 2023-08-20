@@ -1,9 +1,14 @@
 import geopandas as gpd
 import json
+import warnings
 from methods.cj_converter import *
 from methods.ade.energy_ADE_extension import *
 # from methods.ade.utility_network_ADE_extension_for_ding0 import *
 from methods.ade.utility_network_ADE_extension import *
+
+warnings.filterwarnings('ignore')
+
+start_time = time.time()
 
 # Loading configuration parameters
 with open("buildings/file_loader/config/config.json", "r") as f:
@@ -43,7 +48,7 @@ with open("config/weather_config.json", "r") as k:
     weather_config_data = json.load(k)
 
 ''' 
-Loading buildings geodataframe: 
+Loading buildings GeoDataFrame: 
 the user can choose among two possible loading options 
 accordingly to the file format previously chosen in buildings\main.py:
  1) ShapeFile folder;
@@ -90,3 +95,11 @@ In addition to that, in the previous lines, no appending must be operated. '''
 # CityJSON writing
 cj_creator = CityJSONCreator(gdf)
 cj_creator.write_json(bbox, bounds, ades, ext_bld_list, ext_city_list, lod, crs, crs_url, UTM_zone, city, nation, building_target, nuts3, lau2)
+
+# Computing execution time
+end_time = time.time()
+total_time = end_time - start_time
+hours, diff = divmod(total_time, 3600)
+minutes, seconds = divmod(diff, 60)
+
+print(f"Execution time: {int(hours)} h, {int(minutes)} min, {int(seconds)} s")

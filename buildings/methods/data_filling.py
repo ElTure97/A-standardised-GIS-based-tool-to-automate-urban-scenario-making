@@ -13,6 +13,9 @@ class DataFiller:
         self.building_floor_no_headers_list = []
         self.building_floor_no_list = []
 
+    ''' Filling building age where missing, with a year randomly generated in a specified range,
+     randomly selected according to the probability distribution associated with 
+     the census section the building belongs to, based on census section data. '''
     def fill_age(self, columns, sez_id, age_columns):
 
         for key in age_columns:
@@ -39,6 +42,16 @@ class DataFiller:
                     pass
         return self.gdfs
 
+    ''' 
+    Filling building height where missing, computing it over available data,
+    giving the highest priority to the availability of the ones on top of the list, 
+    the lowest to the availability of the ones on the bottom for better reliability:
+    1) Building no. of floors;
+    2) Nearest neighbours heights if at least 2/3 of height data (referred to buildings
+    in the same census section) are available;
+    3) Building no. of floors randomly selected according to the probability distribution associated with 
+    the census section the building belongs to, based on census section data.
+    '''
     def fill_missing_height(self, columns, sez_id, floor_columns, floor_height):
         self.building_floor_no_headers_list.clear()
         self.building_floor_no_list.clear()
@@ -62,7 +75,7 @@ class DataFiller:
                         for height_elem in df[columns[1]]:
                             if isinstance(height_elem, (float, np.floating)) and not np.isnan(height_elem):
                                 nn_height.append(height_elem)
-                        if len(nn_height) >= ((2/3)*len(df)):
+                        if len(nn_height) >= ((2/3) * len(df)):
                             height = round((statistics.mean(nn_height)), 1)
                         else:
                             floor_probs = []
@@ -70,15 +83,23 @@ class DataFiller:
                                 floor_probs.append(row[self.building_floor_no_headers_list[j]])
                             floor_probs = [item for sublist in floor_probs for item in sublist]
                             if sum(floor_probs) == 0:
-                                floor_probs = [1 / len(self.building_floor_no_list)] * len(self.building_floor_no_list)
+                                floor_probs = [1 / len(self.building_floor_no_list)] * len(self.building_floor_no_list)  # Uniform probability distribution
                             else:
                                 floor_probs = [prob / sum(floor_probs) for prob in floor_probs]
-                            height = round((((np.random.choice(self.building_floor_no_list, p=floor_probs)) * (floor_height)) + floor_height), 1)
+                            height = round((((np.random.choice(self.building_floor_no_list, p=floor_probs)) * floor_height) + floor_height), 1)
                     df[columns[1]].iloc[idx] = height
                 else:
                     pass
         return self.gdfs
 
+    ''' 
+    Filling building no. of floors where missing, computing it over available data,
+    giving the highest priority to the availability of the ones on top of the list, 
+    the lowest to the availability of the ones on the bottom for better reliability:
+    1) Building height;
+    2) Building no. of floors randomly selected according to the probability distribution associated with 
+    the census section the building belongs to, based on census section data.
+    '''
     def fill_no_of_floors(self, columns, sez_id, floor_columns, floor_height):
         self.building_floor_no_headers_list.clear()
         self.building_floor_no_list.clear()
@@ -112,31 +133,41 @@ class DataFiller:
                     pass
                 df[columns[4]].iloc[idx] = no_of_floors
         return self.gdfs
+
+    ''' Filling use destination with default value, where missing. '''
     def fill_use_destination(self, columns):
         for i, df in self.gdfs.items():
             df[columns[3]] = df[columns[3]].fillna("yes")
         return self.gdfs
 
+    ''' Filling census section with the census section number the building belongs to. '''
     def fill_sez_cens(self, columns):
         for i, df in self.gdfs.items():
             df[columns[10]] = int(i)
         return self.gdfs
 
-    def fill_infiltration_rate(self, columns):
+    ''' Filling the infiltration rate with a randomly generated value according to 
+    a uniform probability distribution in the specified range, where missing. '''
+    def fill_infiltration_rate(self, columns, ir_range):
         for i, df in self.gdfs.items():
-            df[columns[13]] = df[columns[13]].fillna(round(random.uniform(0.5, 2), 2))
+            df[columns[13]] = df[columns[13]].fillna(round(random.uniform(ir_range[0], ir_range[1]), 2))
         return self.gdfs
 
+    ''' Filling cooling system boolean value with a randomly generated one according to 
+    a probability distribution with specified parameters, where missing. '''
     def fill_cooling_system(self, columns, cooling_prob):
         for i, df in self.gdfs.items():
-            df[columns[14]] = df[columns[14]].fillna(random.choices([True, False], weights= cooling_prob, k=1)[0])
+            df[columns[14]] = df[columns[14]].fillna(random.choices([True, False], weights=cooling_prob, k=1)[0])
         return self.gdfs
 
+    ''' Filling heating system boolean value with a randomly generated one according to 
+    a probability distribution with specified parameters, where missing. '''
     def fill_heating_system(self, columns, heating_prob):
         for i, df in self.gdfs.items():
-            df[columns[15]] = df[columns[15]].fillna(random.choices([True, False], weights= heating_prob, k=1)[0])
+            df[columns[15]] = df[columns[15]].fillna(random.choices([True, False], weights=heating_prob, k=1)[0])
         return self.gdfs
 
+    ''' Checking consistency between building height and no. of floors. '''
     def check_consistency(self, columns, floor_height):
         for i, df in self.gdfs.items():
             for idx, no_of_floors in enumerate(df[columns[4]]):
@@ -145,14 +176,14 @@ class DataFiller:
                     df[columns[1]].iloc[idx] = round((floor_height * (float(no_of_floors) + 1)), 1)
         return self.gdfs
 
-
-    def fill_missing_data(self, columns, sez_id, age_columns, floor_columns, floor_height, cooling_prob, heating_prob):
+    ''' Filling missing data. '''
+    def fill_missing_data(self, columns, sez_id, age_columns, floor_columns, floor_height, cooling_prob, heating_prob, ir_range):
         self.gdfs = self.fill_age(columns, sez_id, age_columns)
         self.gdfs = self.fill_missing_height(columns, sez_id, floor_columns, floor_height)
         self.gdfs = self.fill_use_destination(columns)
         self.gdfs = self.fill_sez_cens(columns)
         self.gdfs = self.fill_no_of_floors(columns, sez_id, floor_columns, floor_height)
-        self.gdfs = self.fill_infiltration_rate(columns)
+        self.gdfs = self.fill_infiltration_rate(columns, ir_range)
         self.gdfs = self.fill_cooling_system(columns, cooling_prob)
         self.gdfs = self.fill_heating_system(columns, heating_prob)
         gdfs = self.check_consistency(columns, floor_height)

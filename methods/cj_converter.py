@@ -9,7 +9,7 @@ class CityJSONCreator(JSON_Writer):
         super().__init__(gdf)
         self.headers = list(self.gdf.columns)
 
-        # empty dict
+        # Empty dict
         self.cityjson_data = {
             "type": "CityJSON",
             "version": "1.1",
@@ -37,7 +37,7 @@ class CityJSONCreator(JSON_Writer):
             else:
                 cens_sez = f"{int(census_sez)}"
             total_no_of_families = group[self.headers[7]].sum()
-            for f in range(total_no_of_families):
+            for f in range(total_no_of_families):  # Associating a UID with each family
                 if f + 1 < 10:
                     families_sez_list.append(f"{nuts3}_{lau2}_{cens_sez}_{cap_lett}_0000{f + 1}")
                 elif 9 < f + 1 < 100:

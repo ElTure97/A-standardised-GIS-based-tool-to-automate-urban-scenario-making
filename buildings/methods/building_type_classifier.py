@@ -16,11 +16,11 @@ class BuildingTypeClassifier:
             else:
                 corr_fact = 1
             no_of_families = float(row[pop_columns[0]].iloc[0]) * corr_fact
-            family_uid_list = []
-            if no_of_families > 0:
-                for k in range(int(no_of_families)):
-                    family_uid_list.append(f"SEZ{str(int(i))}FAM{str(k)}")
-                random.shuffle(family_uid_list)
+            # family_uid_list = []
+            # if no_of_families > 0:
+            #     for k in range(int(no_of_families)):
+            #         family_uid_list.append(f"SEZ{str(int(i))}FAM{str(k)}")
+            #     random.shuffle(family_uid_list)
             population = float(row[pop_columns[1]].iloc[0]) * corr_fact
 
             def calculate_building_GFA(building):  # gross floor area
@@ -67,7 +67,6 @@ class BuildingTypeClassifier:
                     return int(en_dem_per_hh["cooling"] * bui_families)
                 else:
                     return 0
-
 
             cool_energy_mask = df[columns[18]].isna()
 

@@ -26,6 +26,7 @@
   },
   "population_columns": ["PF1", "P1"],
   "z_score_threshold": [1, 0.75],
+  "infiltration_rate_range": [0.5, 2],
   "cooling_system_probability": [0.25, 0.75],
   "heating_system_probability": [0.95, 0.05],
   "energy_demand": {
