@@ -3,7 +3,7 @@ For this step, it is needed the knowledge of the files uploaded in the main and 
 First of all, you have to modify the file you find following the path file_loader/config/config.json: 
 
 - The list associated with the key "building_filtering_values", by dropping the categories which are not relevant to your application.
-Once done, the list must be replaced by a dict element containing the following keys and to each one associated a LIST containing different categories (even expressed as strings, PLEASE PAY ATTENTION IN AVOIDING TYPOS!!!) among the kept ones:
+Once done, the list must be replaced by a dict element containing the following keys and with each one associated a LIST containing different categories (even expressed as strings, PLEASE PAY ATTENTION IN AVOIDING TYPOS!!!) among the kept ones:
   - "not_specified" for very generic categories;
   - "AB" for apartment categories;
   - "SFH" for single family house categories;
