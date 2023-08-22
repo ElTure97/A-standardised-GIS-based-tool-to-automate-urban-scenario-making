@@ -1,6 +1,7 @@
 import pandas as pd
 import chardet
 
+''' CSV census section data loader according to the specified "PROVINCIA" and "COMUNE". '''
 class CSV2DF:
 
     def __init__(self, csv_file, provincia, comune, fields, crs):

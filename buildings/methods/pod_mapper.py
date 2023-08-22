@@ -1,4 +1,6 @@
 import random
+
+''' Random POD code generator according to Italian specifications. '''
 class POD_mapper:
 
     def __init__(self, gdf):

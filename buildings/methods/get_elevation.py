@@ -3,6 +3,10 @@ from shapely.geometry import box, Point, Polygon, MultiPolygon
 from pyproj import CRS, Proj, Transformer
 import time
 
+''' Mapping elevation by discretizing the bounding box into cells according to the specified resolution and taking
+the height of their centroids as reference for getting buildings height as average of heights associated with each point
+of the Polygon or MultiPolygon object. The resulting height will be mapped as z coordinate (same for all points), 
+expressed as height above the sea level. '''
 class ElevationMapper:
     def __init__(self, gdf):
         self.gdf = gdf
@@ -71,9 +75,9 @@ class ElevationMapper:
                 new_mp = MultiPolygon(new_polygons)
                 self.gdf[columns[0]].iloc[i] = new_mp
             else:
-                # to be defined what it should be done in case of different geometry type with respect to Point, Polygon or MultiPolygon
+                # To be defined what it should be done in case of different geometry type with respect to Point, Polygon or MultiPolygon
                 pass
-            print(f"z coordinate correctly mapped to building {i + 1}")
+            print(f"Z coordinate correctly mapped to building {i + 1}")
         return self.gdf, cells
 
     def get_elevation_for_point(self, crs, cells, cells_elevs, lat, lon, h_slm):
@@ -151,7 +155,7 @@ class ElevationMapper:
             return centroids
 
         cell_centroids = get_cell_centroids(cells)
-        self.elevations = self.get_elevations(cell_centroids, h_slm, max_retry = 10, delay = 0.5)
+        self.elevations = self.get_elevations(cell_centroids, h_slm, max_retry=10, delay=0.5)
 
         return cells, self.elevations
 

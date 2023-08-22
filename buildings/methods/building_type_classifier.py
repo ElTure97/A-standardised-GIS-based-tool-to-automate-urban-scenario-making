@@ -8,6 +8,9 @@ class BuildingTypeClassifier:
         self.gdfs = gdfs
         self.sez_det_data = sez_det_data
 
+    ''' Building classification according to TABULA DataSet labels based on parameters previously computed
+    inside that function. Energy demand has been estimated too based on available data but not used 
+    for building classification. '''
     def classify_building(self, columns, sez_id, pop_columns, building_target, filtering_values, en_dem_per_hh):
         for i, df in self.gdfs.items():
             row = self.sez_det_data.loc[self.sez_det_data[sez_id[0]] == i]
@@ -16,14 +19,9 @@ class BuildingTypeClassifier:
             else:
                 corr_fact = 1
             no_of_families = float(row[pop_columns[0]].iloc[0]) * corr_fact
-            # family_uid_list = []
-            # if no_of_families > 0:
-            #     for k in range(int(no_of_families)):
-            #         family_uid_list.append(f"SEZ{str(int(i))}FAM{str(k)}")
-            #     random.shuffle(family_uid_list)
             population = float(row[pop_columns[1]].iloc[0]) * corr_fact
 
-            def calculate_building_GFA(building):  # gross floor area
+            def calculate_building_GFA(building):  # Gross Floor Area
                 area = building[columns[5]]
                 levels = float(building[columns[4]])
                 if levels >= 1:
@@ -84,18 +82,7 @@ class BuildingTypeClassifier:
             df.loc[heat_energy_mask, columns[19]] = df[heat_energy_mask].apply(calculate_heating_energy_demand, axis=1)
 
             def calculate_total_energy_demand(build_elem):
-                building_families = build_elem[columns[8]]
                 energy_demand = int(build_elem[columns[17]] + build_elem[columns[18]] + build_elem[columns[19]])
-                # en_dem = 0
-                # if build_elem[columns[14]] and build_elem[columns[15]]:
-                #     en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["cooling"] + en_dem_per_hh["energy_demand"]["heating"]
-                # elif build_elem[columns[14]] and not build_elem[columns[15]]:
-                #     en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["cooling"]
-                # elif not build_elem[columns[14]] and build_elem[columns[15]]:
-                #     en_dem = en_dem_per_hh["energy_demand"]["electricity"] + en_dem_per_hh["energy_demand"]["heating"]
-                # elif not build_elem[columns[14]] and not build_elem[columns[15]]:
-                #     en_dem = en_dem_per_hh["energy_demand"]["electricity"]
-                # energy_demand = int(building_families * en_dem)
                 return energy_demand
 
             tot_energy_mask = df[columns[16]].isna()
@@ -105,13 +92,13 @@ class BuildingTypeClassifier:
             for idx, building_elem in enumerate(df[columns[3]]):
                 if building_elem not in filtering_values["not_specified"]:
                     if building_elem in filtering_values["AB"]:
-                        df[columns[7]].iloc[idx] = "AB"  # apartment block
+                        df[columns[7]].iloc[idx] = "AB"  # Apartment Block
                     elif building_elem in filtering_values["SFH"]:
-                        df[columns[7]].iloc[idx] = "SFH"  # single family house
+                        df[columns[7]].iloc[idx] = "SFH"  # Single Family House
                     elif building_elem in filtering_values["MFH"]:
-                        df[columns[7]].iloc[idx] = "MFH"   # multifamily house
+                        df[columns[7]].iloc[idx] = "MFH"   # Multi Family House
                     elif building_elem in filtering_values["TH"]:
-                        df[columns[7]].iloc[idx] = "TH"  # terraced house
+                        df[columns[7]].iloc[idx] = "TH"  # Terraced House
                 else:
                     no_of_floors = float(df[columns[4]].iloc[idx])
                     if no_of_floors >= 3:

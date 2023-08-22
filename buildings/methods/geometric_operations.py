@@ -13,7 +13,8 @@ class GeomOperator:
         self.sez_data = sez_data
         self.sez_det_data = sez_det_data
 
-
+    ''' Spatial overlapping between the GeoDataFrames respectively coming from the ShapeFile folder 
+    and OpenStreetMap data. '''
     def join_gdf(self, target, columns, filtering_values, id):
         filter_values = set(val for bld_val in filtering_values.values() for val in bld_val)
         filtered_data = self.osm_data[self.osm_data[target].isin(filter_values)].copy()
@@ -46,6 +47,7 @@ class GeomOperator:
         osm_gdf = filtered_data.loc[:, columns]
         return osm_gdf
 
+    ''' Mapping building height and floor area according to available data. '''
     def get_shp_data(self, target, columns, fields, filtering_values, target_crs, id):
         osm_gdf = self.join_gdf(target, columns, filtering_values, id)
         print("Geometric operations in progress...")
@@ -53,7 +55,7 @@ class GeomOperator:
             intersecting_features_osm = self.osm_data.loc[self.osm_data.intersects(row.geometry)]
             intersecting_features_shp = self.shp_data.loc[self.shp_data.intersects(row.geometry)]
 
-            # check if height data are available in both osm_data and shp_data
+            # Checking if height data are available in both OpenStreetMap data and ShapeFile data
             if not intersecting_features_osm.empty and not intersecting_features_shp.empty:
                 h_osm = intersecting_features_osm[columns[1]].values[0]
                 h_shp = intersecting_features_shp[fields[0]].values[0]
@@ -72,13 +74,13 @@ class GeomOperator:
                     return round(h_osm, 1)
                 else:
                     return round(h_shp, 1)
-            # check if height data is available only in osm_data
+            # Checking if height data are available only in OpenStreetMap data
             elif not intersecting_features_osm.empty:
                 return intersecting_features_osm[columns[1]].values[0]
-            # check if height data is available only in shp_data
+            # Checking if height data are available only in ShapeFile data
             elif not intersecting_features_shp.empty:
                 return intersecting_features_shp[fields[0]].values[0]
-            # if no height data is available, return nan
+            # If no height data are available, return NaN
             else:
                 return np.nan
 
@@ -88,7 +90,7 @@ class GeomOperator:
             intersecting_features_osm = self.osm_data.loc[self.osm_data.intersects(row.geometry)]
             intersecting_features_shp = self.shp_data.loc[self.shp_data.intersects(row.geometry)]
 
-            # check if area data is available in both osm_data and shp_data
+            # Checking if area data are available in both OpenStreetMap data and ShapeFile data
             if not intersecting_features_osm.empty and not intersecting_features_shp.empty:
                 area_osm = intersecting_features_osm[columns[5]].values[0]
                 area_shp = intersecting_features_shp[fields[2]].values[0]
@@ -108,13 +110,13 @@ class GeomOperator:
                     return round(area_osm, 2)
                 else:
                     return round(area_shp, 2)
-            # check if area data is available only in osm_data
+            # Checking if area data are available only in OpenStreetMap data
             elif not intersecting_features_osm.empty:
                 return intersecting_features_osm[columns[5]].values[0]
-            # check if area data is available only in shp_data
+            # Checking if area data are available only in ShapeFile data
             elif not intersecting_features_shp.empty:
                 return intersecting_features_shp[fields[2]].values[0]
-            # if no area data is available, calculate area from polygon
+            # If no area data area available, area is computed from Polygon
             else:
                 polygon = row.geometry.to_crs(target_crs)
                 area = Polygon(polygon.exterior.coords).area
@@ -123,6 +125,8 @@ class GeomOperator:
         osm_gdf[columns[5]] = osm_gdf.apply(map_area, axis=1)
         return osm_gdf
 
+    ''' Splitting the buildings GeoDataFrame into many smaller GeoDataFrames according to the census section each 
+    building belongs to for later consistent data filling. '''
     def place_building(self, target, columns, fields, filtering_values, id, target_crs, z_score):
         sez_gdfs = {}
         gdf = self.get_shp_data(target, columns, fields, filtering_values, target_crs, id)

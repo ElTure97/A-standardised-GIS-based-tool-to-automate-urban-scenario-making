@@ -3,6 +3,7 @@ import osmnx as ox
 import numpy as np
 import geopandas as gpd
 
+''' OpenStreetMap data loader '''
 class OSM2GeoDF:
     def __init__(self, address, distance, target, required_columns, crs):
         self.address = address
@@ -21,7 +22,7 @@ class OSM2GeoDF:
             if col not in gdf.columns:
                 gdf[col] = np.nan
 
-        # Fill the missing values with None
+        # Filling missing values with NaN
         gdf = gdf.fillna(np.nan)
         return gdf
 

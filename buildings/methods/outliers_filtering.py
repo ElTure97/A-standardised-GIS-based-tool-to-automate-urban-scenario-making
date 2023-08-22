@@ -1,10 +1,11 @@
+""" Outliers filtering according to building gross floor area and height. """
 class OutliersFilter:
 
     def __init__(self, gdf):
         self.gdf = gdf
 
     def filter_outliers(self, columns, z_score):
-        # outliers are dropped according to building gross floor area and height
+
         miu_height = self.gdf[columns[1]].mean()
         sigma_height = self.gdf[columns[1]].std()
 

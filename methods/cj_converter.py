@@ -90,9 +90,9 @@ class CityJSONCreator(JSON_Writer):
         no_of_people = float(bld_elem[self.headers[8]])
         no_of_fams = float(bld_elem[self.headers[7]])
         no_of_floors = int(bld_elem[self.headers[3]])
-        min_gfa_per_pers = 60  # default value of net area per person
-        not_usable_space = 30  # default value of not usable area per floor
-        corr_factor = 3 / 2  # correction factor
+        min_gfa_per_pers = 60  # Default value of net area per person
+        not_usable_space = 30  # Default value of not usable area per floor
+        corr_factor = 3 / 2  # Correction factor
         gfa = float(bld_elem[self.headers[5]])
         if no_of_fams != 0:
             no_of_people_per_fam = no_of_people / no_of_fams
@@ -106,7 +106,7 @@ class CityJSONCreator(JSON_Writer):
             no_of_accommodations = round(gfa / (no_of_floors * corr_factor * min_gfa_per_pers))
 
         if no_of_accommodations == 0:
-            no_of_accommodations = 1  # minimum value
+            no_of_accommodations = 1  # Minimum value
 
         avg_area = round(((gfa - (no_of_floors * not_usable_space)) / no_of_accommodations), 2)
 
@@ -229,9 +229,9 @@ class CityJSONCreator(JSON_Writer):
             # Part of the code specific for energy extension integration if there
             if len(ext_bld) > 0:
                 if building["geometry"][0]["type"] == "Solid":
-                     building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0])  # default value
+                     building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0])  # Default value
                 else:
-                     building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0][0])  # default value
+                     building["attributes"]["+energy-referencePoint"] = str(bound[0][0][0][0][0])  # Default value
 
             # Adding building object to CityObjects dict
             self.cityjson_data["CityObjects"][f"building{index + 1}"] = building

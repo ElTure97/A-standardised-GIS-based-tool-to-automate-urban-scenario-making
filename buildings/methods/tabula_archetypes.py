@@ -2,6 +2,7 @@ import pandas as pd
 import time
 import random
 
+''' TABULA DataSet info loader for correct building code label mapping. '''
 class TabulaInfoLoader:
 
     def __init__(self, gdf, input_file, sheet_name, code_country_column, code_country):
@@ -27,11 +28,11 @@ class TabulaInfoLoader:
             if year_elem != "-1919" and year_elem != "2005-":
                 year_range_inf, year_range_sup = map(int, year_elem.split("-"))
             elif year_elem == "-1919":
-                year_range_inf = 1800  # default value
+                year_range_inf = 1800  # Default value
                 year_range_sup = 1918
             else:
                 year_range_inf = 2006
-                year_range_sup = int(time.strftime("%Y"))  # current year
+                year_range_sup = int(time.strftime("%Y"))  # Current year
             construction_year = random.randint(year_range_inf, year_range_sup)
             self.gdf[gdf_columns[2]].iloc[idx] = int(construction_year)
             for i in prov_df.index:

@@ -1,5 +1,7 @@
 import geopandas as gpd
 from shapely.geometry import box
+
+''' ShapeFile data loader '''
 class SHP2GeoDF:
     def __init__(self, shapefile, bounding_box, crs):
         self.shapefile = shapefile

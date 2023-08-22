@@ -14,7 +14,7 @@ class DataFiller:
         self.building_floor_no_list = []
 
     ''' Filling building age where missing, with a year randomly generated in a specified range,
-     randomly selected according to the probability distribution associated with 
+     randomly selected too according to the probability distribution associated with 
      the census section the building belongs to, based on census section data. '''
     def fill_age(self, columns, sez_id, age_columns):
 
@@ -47,7 +47,7 @@ class DataFiller:
     giving the highest priority to the availability of the ones on top of the list, 
     the lowest to the availability of the ones on the bottom for better reliability:
     1) Building no. of floors;
-    2) Nearest neighbours heights if at least 2/3 of height data (referred to buildings
+    2) Nearest neighbours height if at least 2/3 of height data (referred to buildings
     in the same census section) are available;
     3) Building no. of floors randomly selected according to the probability distribution associated with 
     the census section the building belongs to, based on census section data.

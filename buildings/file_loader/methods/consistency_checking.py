@@ -3,6 +3,8 @@ import geopandas as gpd
 from shapely.geometry import MultiPolygon, Point, Polygon, shape
 from pyproj import CRS
 
+''' Consistency checker for correct specified Coordinate Reference System (CRS) setting and 
+altitude coordinates (if there) storing. '''
 class ConsistencyChecker:
     def __init__(self, gdf, crs):
         self.gdf = gdf
@@ -15,7 +17,6 @@ class ConsistencyChecker:
 
     def check_projection(self):
         coord_ref_system = CRS.from_string(self.crs)
-        # self.gdf.crs = coord_ref_system
         self.gdf = self.gdf.to_crs(coord_ref_system)
         return self.gdf
 
@@ -30,7 +31,6 @@ class ConsistencyChecker:
                 for j in range(len(coords)):
                     if len(coords[j]) > 2:
                         sum_h += coords[j][2]
-                        # z_coord[i].append(coords[j][2])
                         coords[j] = coords[j][:2]
                     z_coord[i] = sum_h / len(coords)
                 new_point = Point(coords)
@@ -41,7 +41,6 @@ class ConsistencyChecker:
                 for j in range(len(coords)):
                     if len(coords[j]) > 2:
                         sum_h += coords[j][2]
-                        # z_coord[i].append(coords[j][2])
                         coords[j] = coords[j][:2]
                     z_coord[i] = sum_h / len(coords)
                 new_poly = Polygon(coords)
@@ -56,7 +55,6 @@ class ConsistencyChecker:
                     for j in range(len(coords)):
                         if len(coords[j]) > 2:
                             sum_h += coords[j][2]
-                            # z_coord[i].append(coords[j][2])
                             coords[j] = coords[j][:2]
                         z_coord[i][p] = sum_h / len(coords)
                     new_poly = Polygon(coords)

@@ -1,5 +1,6 @@
 from geopy.geocoders import Nominatim
 
+''' Bounding box generator based on specified address and distance. '''
 class BboxGenerator:
     def __init__(self, address, distance, app_name):
         self.address = address
