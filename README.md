@@ -1,5 +1,5 @@
 Welcome!
-This repository contains the code developed for the master's thesis degree of the course ICT for Smart Societies at the Politecnico di Torino.
+This repository contains the code developed for the master's degree thesis of the course ICT for Smart Societies at the Politecnico di Torino.
 The project consists of a pipeline whose main goal is to output a CityJSON file (for further conversion to CityGML) storing buildings data, compliant
 with the extensions schemas for Energy and Utility Network developed according to the respective CityGML Application Domain Extensions (ADEs) specifications. 
 
