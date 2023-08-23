@@ -84,7 +84,7 @@ statistical assumptions and available census data. '''
 
 # Data filling operations
 filled_gdfs_obj = DataFiller(gdfs, sez_det_df)
-gdfs_filled = filled_gdfs_obj.fill_missing_data(required_columns, id_field, building_age_columns, no_floors_columns, floor_height, cooling_prob, heating_prob)
+gdfs_filled = filled_gdfs_obj.fill_missing_data(required_columns, id_field, building_age_columns, no_floors_columns, floor_height, cooling_prob, heating_prob, infiltration_rate_range)
 
 # Building type classification according to TABULA DataSet labels and further computations
 def_gdfs_obj = BuildingTypeClassifier(gdfs_filled, sez_det_df)

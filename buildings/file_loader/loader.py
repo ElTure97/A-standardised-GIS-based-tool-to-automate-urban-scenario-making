@@ -48,7 +48,7 @@ shapefile_path = shapefile
 shp2gdf = SHP2GeoDF(shapefile_path, bbox, crs)
 shp_gdf = shp2gdf.get_gdf_from_shp()
 
-# Checking for consistency and storing altitude coordinates (if there)
+# Checking for consistency and storing altitude coordinates (if there) and saving for later processing
 
 checker_osm = ConsistencyChecker(osm_gdf, crs)
 osm_gdf, osm_z = checker_osm.check_consistency()
@@ -58,13 +58,13 @@ checker_shp = ConsistencyChecker(shp_gdf, crs)
 shp_gdf, shp_z = checker_shp.check_consistency()
 shp_gdf.to_pickle('output/shp.pkl')
 
-# Loading census sections by specifying the bounding box
+# Loading census sections by specifying the bounding box and saving after filtering for later processing
 cens_sez = sez_shp
 sez_shp2gdf = SHP2GeoDF(cens_sez, bbox, crs)
 sez_shp_gdf = sez_shp2gdf.get_gdf_from_shp()
 sez_shp_gdf.to_pickle('output/sez.pkl')
 
-# Loading census sections detailed data
+# Loading census sections detailed data and saving after filtering for later processing
 sez_cens = CSV2DF(sez_csv, provincia, comune, fields, crs)
 sez_cens_df = sez_cens.load_csv(sez_shp_gdf, id_to_filter)
 sez_cens_df.to_pickle('output/sez_det.pkl')
@@ -72,7 +72,7 @@ sez_cens_df.to_pickle('output/sez_det.pkl')
 # Computing execution time
 end_time = time.time()
 total_time = end_time - start_time
-ore, resto = divmod(total_time, 3600)
-minuti, secondi = divmod(resto, 60)
+hours, diff = divmod(total_time, 3600)
+minutes, seconds = divmod(diff, 60)
 
-print(f"Tempo di esecuzione: {int(ore)} h, {int(minuti)} min, {int(secondi)} s")
+print(f"Execution time: {int(hours)} h, {int(minutes)} min, {int(seconds)} s")

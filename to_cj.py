@@ -50,7 +50,7 @@ with open("config/weather_config.json", "r") as k:
 ''' 
 Loading buildings GeoDataFrame: 
 the user can choose among two possible loading options 
-accordingly to the file format previously chosen in buildings\main.py:
+accordingly to the file format previously chosen for saving in buildings\main.py:
  1) ShapeFile folder;
  2) GeoJSON data.
  '''

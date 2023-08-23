@@ -18,7 +18,7 @@
     "resolution": 200,
     "target": "building",
     "building_target": "residential",
-    "building_filtering_values":  {
+    "building_filtering_values": {
         "not_specified": ["yes", "residential"],
         "AB": ["apartments", "dormitory"],
         "SFH": ["detached"],
