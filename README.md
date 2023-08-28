@@ -11,7 +11,9 @@ The scripts to be run are respectively:
 3) to_cj.py.
 
 They can also be used as methods, but first, for each one of the steps listed above, the user is required to follow the configuration steps in-depth explained in the corresponding .md file inside each working directory.
-Please, follow them carefully for correctly obtaining the wished output.
+Please, follow them carefully for correctly obtaining the wished output. 
+
+You can also check the pipeline diagram you find in the current repository for better displaying how the application works.
 
 Notice that the whole pipeline has been designed for an Italian study case, relying on external files to be provided.
 Utility network data, just for testing purposes during development, have been achieved through the ding0 tool (https://github.com/openego/ding0) which at the time of writing works ONLY over a German database. 
