@@ -1,7 +1,7 @@
 For correct synthetic distribution grid generation by ding0, you need to change the virtual environment.
-The new environment must be configured for all needed packages correct installation (in order to avoid conflicts with other already installed libraries).
+The new environment must be configured to install all needed packages (to avoid conflicts with other already installed libraries).
 
-The needed environment configuration file is available on "envs_config" folder.
+The needed environment configuration file is available in "envs_config" folder.
 
 The user is also required to configure the needed parameters to allow for the proper working of the utility network generator.
 In the file "config/ding0_config.json", the user must respectively put:
@@ -10,9 +10,9 @@ In the file "config/ding0_config.json", the user must respectively put:
     After having filtered data according to the:
     - version --> v0.4.5
     
-    For that purpose, the code has been written for loading ONE MV NETWORK AT ONCE. 
-    If multiple network loading is required, the user is asked to modify the code for mapping the network to the output CityJSON to be compliant with the output of multiple network loading.
-2) Once chosen the MV_district, the user is required to also put the geometry of the MultiPolygon the considered MV_district is built over, by copying and pasting the value corresponding to the field "geom".
-It corresponds to a long exa-decimal string which represents a compressed form of the boundaries of the district. 
+    The code has been written for loading ONE MV NETWORK AT ONCE for that purpose. 
+    If multiple network loading is required, the user is asked to modify the code for mapping the network to the output CityJSON to comply with multiple network loading outputs.
+2) Once the MV_district is chosen, the user must also put the geometry of the MultiPolygon the considered MV_district is built over by copying and pasting the value corresponding to the field "geom".
+It corresponds to a long exa-decimal string, which represents a compressed form of the district's boundaries. 
 
-Instead, if needed data for utility network mapping are already available, ignore the steps listed below.
+Instead, if needed data for utility network mapping are already available, ignore the steps listed above.
