@@ -13,7 +13,7 @@ class OSM2GeoDF:
         self.crs = crs
 
     def get_gdf_from_osm(self):
-        gdf = ox.geometries.geometries_from_address(self.address, tags={self.target: True}, dist=self.distance)
+        gdf = ox.features.features_from_address(self.address, tags={self.target: True}, dist=self.distance)
         gdf.crs = self.crs
         return gdf
 
