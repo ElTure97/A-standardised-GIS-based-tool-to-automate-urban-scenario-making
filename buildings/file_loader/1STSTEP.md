@@ -17,7 +17,7 @@ You are asked to put the LAU2 as a string of 6 digits. In case of missing digits
 5) Choose the coordinate reference system;
 6) Choose the coordinate reference system zone, to be expressed as integer, according to the UTM fuso to reproject polygons and following the minimum projected bounds coordinates expressed as a list as follows:
 [min_x, min_y, min_z] respectively associated with east, north and height;
-7) Specify what are the target of your interest(e.g. building) to properly filter open street map data;
+7) Specify what are the target of your interest (e.g. building) to properly filter open street map data;
 8) Specify the target of the building of your interest (e.g. residential) for later building use assignment.
 It is strongly suggested to use this application for one target at a time and merge in the end different output datasets.
 If simultaneous different building targets data management is needed, the code requires some adaptation to cope with it;
