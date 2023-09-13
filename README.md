@@ -1,4 +1,4 @@
-Welcome!
+Welcome! 
 
 This repository contains the code developed for the ICT for Smart Societies master's degree thesis at the Politecnico di Torino, titled:
 
