@@ -25,7 +25,7 @@ Utility network data, just for testing purposes during development, have been ac
 Instead, the final output relies on network data externally provided as PandaPower file.
 
 A virtual environment creation is strongly suggested. The needed packages are:
-
+ 
 - chardet;
 - geopy;
 - geopandas;
