@@ -306,5 +306,5 @@ class CityJSONCreator(JSON_Writer):
 
     # JSON writing
     def write_json(self, bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, building_target, nuts3, lau2):
-        path = f"output/{city}_{building_target}.json"
+        path = f"output/{city}_{building_target}.city.json"
         super().write_json(path, self.create_CJ(bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target))
