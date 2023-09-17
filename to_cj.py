@@ -149,8 +149,8 @@ ext_city_list.append(utility_network_ext)
 '''Extension removal from the ADEs list just for single extension testing purposes, if needed.
 Element 0 is the energy extension, while element -1 is the utility network one.
 In addition to that, in the previous lines, no appending must be operated. '''
-ades.pop(0)
-ades.pop(-1)
+# ades.pop(0)
+# ades.pop(-1)
 
 # CityJSON writing
 cj_creator = CityJSONCreator(gdf)
