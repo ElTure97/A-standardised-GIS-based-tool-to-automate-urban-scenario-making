@@ -1,9 +1,11 @@
 Now, you have all the files needed for building spatial analysis for further simulation purposes.
 For this step, it is needed the knowledge of the files uploaded in the main and their relative fields to be taken into account.
-First of all, you have to modify the file you find following the path file_loader/config/config.json: 
+First of all, you have to modify the file you find following the path file_loader/config/config.json, from the command line.
 
-- The list associated with the key "building_filtering_values" by dropping the categories which are not relevant to your application.
-Once done, the list must be replaced by a dict element containing the following keys and with each one associated a LIST containing different categories (even expressed as strings, PLEASE PAY ATTENTION IN AVOIDING TYPOS!!!) among the kept ones:
+You can find below an in-depth explanation of what the user is required to do in an easy and friendly way directly on the terminal.
+
+- The list associated with the key "building_filtering_values" will be modified by dropping the categories which are not relevant to your application.
+Once done, the list will be replaced by a dict element containing the following keys and with each one associated a LIST containing different categories (even expressed as strings, PLEASE PAY ATTENTION IN AVOIDING TYPOS!!!) among the kept ones:
   - "not_specified" for very generic categories;
   - "AB" for apartment categories;
   - "SFH" for single family house categories;

@@ -7,16 +7,16 @@ This repository contains the code developed for the ICT for Smart Societies mast
 The project consists of a pipeline whose primary goal is to output a CityJSON file (for further conversion to CityGML) storing buildings' data, compliant
 with the extensions' schemas for Energy and Utility Network developed according to the respective CityGML Application Domain Extensions (ADEs) specifications. 
 
-To start, please follow the reverse path from the inner folder ("buildings/file_loader") to the outer one.
+To start, please follow the reverse path from the inner folder ("buildings/file_loader") to the outer one to correctly set the instance.
+The configuration steps are explained in the corresponding .md file inside each working directory.
+Please follow them carefully to obtain the desired output. 
 The scripts to be run are, respectively:
 
 1) buildings/file_loader/loader.py;
 2) buildings/main.py;
 3) to_cj.py.
 
-
-They can also be used as methods, but first, for each of the steps listed above, the user must follow the configuration steps in-depth explained in the corresponding .md file inside each working directory.
-Please follow them carefully to obtain the desired output. 
+But actually, the project has been designed such that only "to_cj.py" must be run by following the instructions displayed on the terminal.
 
 You can also check the pipeline diagram in the current repository to better display how the application works.
 
