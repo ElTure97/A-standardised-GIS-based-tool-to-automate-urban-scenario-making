@@ -18,7 +18,7 @@ The scripts to be run are, respectively:
 
 But actually, the project has been designed such that only "to_cj.py" must be run by following the instructions displayed on the terminal.
 
-You can also check the pipeline diagram in the current repository to better display how the application works.
+You can also check the pipeline diagram in the current repository to better understand how the application works.
 
 Notice that the whole pipeline has been designed for an Italian study case, relying on external files to be provided.
 Utility network data, just for testing purposes during development, have been achieved through the ding0 tool (https://github.com/openego/ding0), which, at the time of writing, works ONLY over a German database. 
