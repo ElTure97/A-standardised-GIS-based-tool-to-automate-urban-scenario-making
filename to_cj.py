@@ -51,6 +51,10 @@ as Apartment Blocks (AB), Single Family Houses (SFH), Multi Family Houses (MFH),
 or not-specified for very generic categories.
 Please choose among the list above the categories you want to map to each of the above-mentioned
 building archetype, paying attention to avoid typos.
+
+***PAY ATTENTION PLEASE***
+Categories strings must be put for each field, just separated by blank spaces (no commas). 
+
 You can discard the categories you do not want to focus on for that application.
 Press ENTER, if none of the building categories belong to the current archetype.
 
