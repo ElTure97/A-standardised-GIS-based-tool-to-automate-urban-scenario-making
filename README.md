@@ -30,6 +30,7 @@ A virtual environment creation is strongly suggested. The needed packages are:
 - geopy;
 - geopandas;
 - matplotlib;
+- meteostat;
 - openpyxl;
 - osmnx;
 - pandapower;
