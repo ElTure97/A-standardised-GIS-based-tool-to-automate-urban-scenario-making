@@ -10,13 +10,16 @@ with the extensions' schemas for Energy and Utility Network developed according 
 To start, please follow the reverse path from the inner folder ("buildings/file_loader") to the outer one to correctly set the instance.
 The configuration steps are explained in the corresponding .md file inside each working directory.
 Please follow them carefully to obtain the desired output. 
-The scripts to be run are, respectively:
+The core scripts for each configuration step, are, respectively:
 
 1) buildings/file_loader/loader.py;
 2) buildings/main.py;
 3) to_cj.py.
+ 
+But the user must run only "to_cj.py", which calls the other two subprocesses, and to follow the instructions 
+displayed on the terminal after setting the instance through the required configuration steps.
 
-But actually, the project has been designed such that only "to_cj.py" must be run by following the instructions displayed on the terminal.
+The configuration files are placed in the "config" folder inside each working directory. 
 
 You can also check the pipeline diagram in the current repository to better understand how the application works.
 
