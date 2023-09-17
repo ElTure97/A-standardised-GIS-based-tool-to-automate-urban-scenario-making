@@ -2,7 +2,7 @@
   "weather_object_config": {
     "measured_element": "temperature",
     "weather_element": "airTemperature",
-    "energy_acquisition_method": "estimation",
+    "energy_acquisition_method": "measurement",
     "energy_interpolation_method": "averageInPrecedingInterval",
     "energy_measurement_period": {
     "start_date": "2022-01-01",

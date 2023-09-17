@@ -1,5 +1,4 @@
 """ This script creates a sample weather data collection if not previously provided. """
-
 import pandas as pd
 import random
 import json

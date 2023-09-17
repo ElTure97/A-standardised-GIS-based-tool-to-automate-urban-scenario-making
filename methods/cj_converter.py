@@ -1,6 +1,7 @@
 import random
 from pyproj import CRS, Proj
 from shapely.geometry import MultiPolygon, Point, Polygon
+from shapely.ops import unary_union
 from .json_writer import JSON_Writer
 
 class CityJSONCreator(JSON_Writer):
@@ -115,6 +116,17 @@ class CityJSONCreator(JSON_Writer):
     # CityJSON creation
     def create_CJ(self, bbox, bounds, ext_name, ext_bld, ext_city, lod, crs, crs_url, zone, city, nation, nuts3, lau2, building_target):
         self.cityjson_data["vertices"] = []
+
+        def is_ccw(polygon):
+            # Returns True if the points of the polygon are in counter-clockwise order
+            area = 0.0
+            for i in range(len(polygon.exterior.coords) - 1):
+                a = polygon.exterior.coords[i]
+                b = polygon.exterior.coords[i + 1]
+                area += a[0] * b[1] - a[1] * b[0]
+            return area >= 0
+
+        k = 0
         for index, row in self.gdf.iterrows():
             geom = row[self.headers[19]]
             if isinstance(geom, Point):
@@ -122,6 +134,8 @@ class CityJSONCreator(JSON_Writer):
             elif isinstance(geom, Polygon):
                 coords = [list(geom.exterior.coords)]
                 coords[0] = [x for i, x in enumerate(coords[0]) if x not in coords[0][:i]]
+                if not is_ccw(geom):
+                    coords[0] = list(reversed(coords[0]))
                 coords_base = []
                 for coord in coords[0]:
                     new_coord_z = coord[2] - self.gdf.loc[index, self.headers[0]]
@@ -133,6 +147,7 @@ class CityJSONCreator(JSON_Writer):
                     coords[0][cr] = self.convert_to_utm(coords[0][cr], crs, zone)
                 self.cityjson_data["vertices"] = self.cityjson_data["vertices"] + coords[0]
                 geom_type = "Solid"
+                k += len(coords[0])
             elif isinstance(geom, MultiPolygon):
                 coords = []
                 polygons = list(geom.geoms)
@@ -141,6 +156,8 @@ class CityJSONCreator(JSON_Writer):
                 p = len(coords)
                 for poly in range(p):
                     coords[poly] = [x for i, x in enumerate(coords[poly]) if x not in coords[poly][:i]]
+                    if not is_ccw(polygons[poly]):
+                        coords[poly] = list(reversed(coords[poly]))
                     coords_base = []
                     for coord in coords[poly]:
                         new_coord_z = coord[2] - self.gdf.loc[index, self.headers[0]]
@@ -152,6 +169,7 @@ class CityJSONCreator(JSON_Writer):
                         coords[poly][cr] = self.convert_to_utm(coords[poly][cr], crs, zone)
                     self.cityjson_data["vertices"] = self.cityjson_data["vertices"] + coords[poly]
                 geom_type = "CompositeSolid"
+                k += len(coords[poly])
             else:
                 # To be defined what it should be done in case of different geometry type with respect to Point, Polygon or MultiPolygon
                 continue
@@ -161,36 +179,52 @@ class CityJSONCreator(JSON_Writer):
             if len(coords) == 1:
                 bound.append([])
                 poly_size = int(len(coords[0])/2)
-                for c in range(poly_size + 1):
+                for c in range((poly_size * 2) + 2):
                     bound[0].append([[]])
-                for crd in range(poly_size):
-                    bound[0][0][0].append(self.cityjson_data["vertices"].index(coords[0][crd]))
+                for crd in range(poly_size, 0, -1):
+                    bound[0][-1][0].append(k - crd - poly_size)
+                bound[0][0][0] = [x + poly_size for x in bound[0][-1][0]]
+                bound[0][0][0] = bound[0][0][0][::-1]
+
                 i = 0
-                for j in range(1, len(bound[0])):
+                for j in range(1, len(bound[0]) - 1, 2):
                     current = bound[0][0][0][i]
                     next = bound[0][0][0][(i + 1) % len(bound[0][0][0])]
+
                     bound[0][j][0].append(current)
+                    bound[0][j][0].append(next - int(len(coords[0]) / 2))
                     bound[0][j][0].append(next)
-                    bound[0][j][0].append(next + int(len(coords[0])/2))
-                    bound[0][j][0].append(current + int(len(coords[0])/2))
+
+                    bound[0][j + 1][0].append(current)
+                    bound[0][j + 1][0].append(current - int(len(coords[0])/2))
+                    bound[0][j + 1][0].append(next - int(len(coords[0]) / 2))
+
                     i += 1
             else:
                 for pol in range(len(coords)):
                     bound.append([[]])
                     poly_size = int(len(coords[pol])/2)
-                    for c in range(poly_size + 1):
+                    for c in range((poly_size * 2) + 2):
                         bound[pol][0].append([[]])
-                    for crd in range(poly_size):
-                        bound[pol][0][0][0].append(self.cityjson_data["vertices"].index(coords[pol][crd]))
+                    for crd in range(poly_size, 0, -1):
+                        bound[pol][0][-1][0].append(k - crd - poly_size)
+                    bound[pol][0][0][0] = [x + poly_size for x in bound[pol][0][-1][0]]
+                    bound[pol][0][0][0] = bound[pol][0][0][0][::-1]
                     i = 0
                     for j in range(1, len(bound[pol][0])):
                         current = bound[pol][0][0][0][i]
                         next = bound[pol][0][0][0][(i + 1) % len(bound[pol][0][0][0])]
+
                         bound[pol][0][j][0].append(current)
+                        bound[pol][0][j][0].append(next - int(len(coords[pol]) / 2))
                         bound[pol][0][j][0].append(next)
-                        bound[pol][0][j][0].append(next + int(len(coords[pol]) / 2))
-                        bound[pol][0][j][0].append(current + int(len(coords[pol]) / 2))
+
+                        bound[pol][0][j + 1][0].append(current)
+                        bound[pol][0][j + 1][0].append(current - int(len(coords[pol])/2))
+                        bound[pol][0][j + 1][0].append(next - int(len(coords[pol]) / 2))
+
                         i += 1
+
 
             # Dict object creation for each building
             building = {

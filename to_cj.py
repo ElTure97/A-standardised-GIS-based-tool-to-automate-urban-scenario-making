@@ -1,14 +1,27 @@
 import geopandas as gpd
 import json
+import os
+import subprocess
+import sys
 import warnings
 from methods.cj_converter import *
 from methods.ade.energy_ADE_extension import *
 # from methods.ade.utility_network_ADE_extension_for_ding0 import *
 from methods.ade.utility_network_ADE_extension import *
 
+current_dir = os.getcwd()
+
 warnings.filterwarnings('ignore')
 
 start_time = time.time()
+
+loader_dir = os.path.dirname(os.path.abspath("buildings/file_loader/loader.py"))
+os.chdir(loader_dir)
+python_exe = sys.executable
+loader = "loader.py"
+subprocess.call([python_exe, loader])
+
+os.chdir(current_dir)
 
 # Loading configuration parameters
 with open("buildings/file_loader/config/config.json", "r") as f:
@@ -25,6 +38,53 @@ UTM_zone = config_data["zona_UTM"]
 bounds = config_data["min_bounds_coordinates"]
 dist = config_data["distance"]
 building_target = config_data["building_target"]
+building_filtering_values = config_data["building_filtering_values"]
+
+# For terminal interface
+print(f"***BUILDING CATEGORIES***")
+for bld_cat in building_filtering_values:
+    print(bld_cat)
+print(f'''
+***CONFIGURATION STEP***
+In the following step, you will be required to type the building categories you want to store 
+as Apartment Blocks (AB), Single Family Houses (SFH), Multi Family Houses (MFH), Terraced House (TH),
+or not-specified for very generic categories.
+Please choose among the list above the categories you want to map to each of the above-mentioned
+building archetype, paying attention to avoid typos.
+You can discard the categories you do not want to focus on for that application.
+Press ENTER, if none of the building categories belong to the current archetype.
+
+***PRESS ENTER TO CONTINUE***
+''')
+
+input()
+
+AB_list = input("AB: ").split()
+SFH_list = input("SFH: ").split()
+MFH_list = input("MFH: ").split()
+TH_list = input("TH: ").split()
+not_specified_list = input("not-specified: ").split()
+print("")
+
+building_filtering_values = {}
+building_filtering_values["not_specified"] = not_specified_list
+building_filtering_values["AB"] = AB_list
+building_filtering_values["SFH"] = SFH_list
+building_filtering_values["MFH"] = MFH_list
+building_filtering_values["TH"] = TH_list
+
+config_data["building_filtering_values"] = building_filtering_values
+
+with open("buildings/file_loader/config/config.json", "w") as outfile:
+    json.dump(config_data, outfile, indent=4)
+
+main_dir = os.path.dirname(os.path.abspath("buildings/main.py"))
+os.chdir(main_dir)
+python_exe = sys.executable
+loader = "main.py"
+subprocess.call([python_exe, loader])
+
+os.chdir(current_dir)
 
 with open("config/cityjson_config.json", "r") as g:
     cj_config_data = json.load(g)
@@ -65,7 +125,7 @@ ext_city_list = []
 pay attention to append the extension to the right list since according to that, 
 the extension will be applied to buildings or city. '''
 energy_ADE_obj = EnergyADE(gdf)
-energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data)
+energy_bld_ext, energy_city_ext = energy_ADE_obj.map_ext(city, address, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data)
 ext_bld_list.append(energy_bld_ext)
 
 ''' 
@@ -89,8 +149,8 @@ ext_city_list.append(utility_network_ext)
 '''Extension removal from the ADEs list just for single extension testing purposes, if needed.
 Element 0 is the energy extension, while element -1 is the utility network one.
 In addition to that, in the previous lines, no appending must be operated. '''
-# ades.pop(0)
-# ades.pop(-1)
+ades.pop(0)
+ades.pop(-1)
 
 # CityJSON writing
 cj_creator = CityJSONCreator(gdf)
@@ -102,4 +162,4 @@ total_time = end_time - start_time
 hours, diff = divmod(total_time, 3600)
 minutes, seconds = divmod(diff, 60)
 
-print(f"Execution time: {int(hours)} h, {int(minutes)} min, {int(seconds)} s")
+print(f"Pipeline execution time: {int(hours)} h, {int(minutes)} min, {int(seconds)} s")

@@ -75,4 +75,4 @@ total_time = end_time - start_time
 hours, diff = divmod(total_time, 3600)
 minutes, seconds = divmod(diff, 60)
 
-print(f"Execution time: {int(hours)} h, {int(minutes)} min, {int(seconds)} s")
+print(f"Data loading carried out in: {int(hours)} h, {int(minutes)} min, {int(seconds)} s")

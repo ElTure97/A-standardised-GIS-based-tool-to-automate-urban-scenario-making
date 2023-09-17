@@ -1,5 +1,5 @@
 {
-  "shp_columns_to_keep" : ["ALTEZZA_VO","NUM_PIANI","SUPERFICIE", "CIT_AR", "CODICE_CEN", "QT_GRONDA", "QT_SUOLO"],
+  "shp_columns_to_keep" : ["ALTEZZA_VO", "NUM_PIANI", "SUPERFICIE", "CIT_AR", "CODICE_CEN", "QT_GRONDA", "QT_SUOLO"],
   "building_age_columns": {
     "E8": "-1919",
     "E9": "1919-1945",

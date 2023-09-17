@@ -1,5 +1,8 @@
 import csv
 from datetime import datetime
+from geopy.geocoders import Nominatim
+from meteostat import Point, Daily
+
 class EnergyADE:
 
     def __init__(self, gdf):
@@ -9,7 +12,7 @@ class EnergyADE:
         self.energy_dict = {}
 
     # Mapping energy data according to the Energy extension schema
-    def map_ext(self, city, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data):
+    def map_ext(self, city, city_address, energy_acquisition_method, energy_interpolation_method, energy_measurement_period, weather_config_data):
         for idx, bld_elem in self.gdf.iterrows():
 
             no_of_floors = int(bld_elem[self.headers[3]])
@@ -262,19 +265,33 @@ class EnergyADE:
         weather_file_path = weather_config_data["weather_file_path"]
         weather_uom = weather_config_data["uom"]
 
-        values_list = []
-        with open(weather_file_path, 'r') as file_csv:
-            csv_reader = csv.reader(file_csv)
-            for row in csv_reader:
-                value = round(float(row[0]), 1)
-                values_list.append(value)
+        # values_list = []
+        # with open(weather_file_path, 'r') as file_csv:
+        #     csv_reader = csv.reader(file_csv)
+        #     for row in csv_reader:
+        #         value = round(float(row[0]), 1)
+        #         values_list.append(value)
 
         weather_acq_method = weather_config_data["weather_object_config"]["energy_acquisition_method"]
         weather_interpol_method = weather_config_data["weather_object_config"]["energy_interpolation_method"]
         weather_start_date = weather_config_data["weather_object_config"]["energy_measurement_period"]["start_date"]
         weather_end_date = weather_config_data["weather_object_config"]["energy_measurement_period"]["end_date"]
 
-        wea_delta_interval = datetime.strptime(weather_end_date, "%Y-%m-%d") - datetime.strptime(weather_start_date, "%Y-%m-%d")
+        start_date = datetime.strptime(weather_start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(weather_end_date, "%Y-%m-%d")
+
+        geolocator = Nominatim(user_agent="myGeocoder")
+
+        address = geolocator.geocode(city_address)
+
+        location = Point(address.latitude, address.longitude)
+
+        wea_data = Daily(location, start_date, end_date)
+        wea_data = wea_data.fetch()
+
+        values_list = wea_data[wea_data.columns[0]].tolist()
+
+        wea_delta_interval = end_date - start_date
         wea_time_interval = ((wea_delta_interval.days + wea_delta_interval.seconds / (60 * 60 * 24)) / 365) / len(values_list)
         wea_no_of_years = round(wea_time_interval, 1)
         wea_no_of_months = round((wea_time_interval * 12), 1)

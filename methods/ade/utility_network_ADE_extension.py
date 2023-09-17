@@ -18,6 +18,7 @@ class UtilityNetworkADE:
         self.un_gdf_list = []
         self.un_elems_labels = []
         self.colors = []
+        self.line_height = 8  # default assumed value of distribution lines height
 
     def load_pp(self, path):
         network = pp.from_pickle(path)
@@ -79,7 +80,7 @@ class UtilityNetworkADE:
 
             bbox = Polygon([(min_lon, min_lat), (max_lon, min_lat), (max_lon, max_lat), (min_lon, max_lat)])
 
-            intersected = gdf[gdf.geometry.apply(lambda geom: bbox.intersects(geom) or bbox.contains(geom))]
+            intersected = gdf[gdf.geometry.apply(lambda geom: bbox.contains(geom))]
 
             return intersected
 
@@ -87,6 +88,8 @@ class UtilityNetworkADE:
         loads_gdf = filter_by_bbox(loads_gdf, bounding_box)
         gens_gdf = filter_by_bbox(gens_gdf, bounding_box)
         trans_gdf = filter_by_bbox(trans_gdf, bounding_box)
+
+        lines_gdf = lines_gdf.explode()  # exploding lines in smaller pieces for correctly filtering lines inside the bounding box
         lines_gdf = filter_by_bbox(lines_gdf, bounding_box)
 
         return buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df
@@ -95,7 +98,6 @@ class UtilityNetworkADE:
     def get_elevations(self, gdf, h_slm, max_retry, delay):
         points = [(elem['geometry']) for _, elem in gdf.iterrows()]
         elevs = self.send_get_or_post_request(points, h_slm, max_retry, delay)
-
         updated_geometries = []
         for geom, elev in zip(gdf['geometry'], elevs):
             if isinstance(geom, Point):
@@ -104,7 +106,7 @@ class UtilityNetworkADE:
                 updated_geometries.append(Point(coords[0]))
             elif isinstance(geom, LineString):
                 coords = list(geom.coords)
-                updated_coords = [(coord[0], coord[1], elev) for coord in coords]
+                updated_coords = [(coord[0], coord[1], elev + self.line_height) for coord in coords]
                 updated_geometries.append(LineString(updated_coords))
             else:
                 # To be defined what should be done in case of different geometries
@@ -235,9 +237,9 @@ class UtilityNetworkADE:
         load_associations = self.associate_buildings_to_loads(self.buildings_gdf, loads_gdf)
 
         # Equally-sized lists creation for plotting purposes
-        self.un_gdf_list = [buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf]
-        self.un_elems_labels = ['buses', 'loads', 'generators', 'transformers', 'lines']
-        self.colors = ['red', 'green', 'purple', 'orange', 'brown']
+        self.un_gdf_list = [loads_gdf, lines_gdf]
+        self.un_elems_labels = ['loads', 'lines']
+        self.colors = ['orange', 'green']
 
         network = {
             f"mvGrid{city}":
@@ -531,10 +533,10 @@ class UtilityNetworkADE:
     def plot_city_map(self, city):
         fig, ax = plt.subplots(figsize=(10, 10))
 
-        self.buildings_gdf.plot(ax=ax, color='blue', edgecolor='black', label='buildings', aspect=1)
+        self.buildings_gdf.plot(ax=ax, color='purple', edgecolor='purple', label='buildings', aspect=1)
 
         for un_gdf, color, label in zip(self.un_gdf_list, self.colors, self.un_elems_labels):
-            un_gdf.plot(ax=ax, color=color, linewidth=2, label=label, aspect=1)
+            un_gdf.plot(ax=ax, color=color, linewidth=4, label=label, aspect=1)
 
         plt.title(f"Buildings and Utility Network {city}")
         plt.xlabel("Longitude")
