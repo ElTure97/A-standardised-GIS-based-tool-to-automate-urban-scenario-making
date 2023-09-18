@@ -139,6 +139,6 @@ class GeomOperator:
             not_in_poly_gdf.drop(gdf_in_poly.index, inplace=True)
             if not gdf_in_poly.empty:
                 sez_gdfs[row[id[1]]] = gdf_in_poly
-                print("Building successfully mapped")
+                # print("Building successfully mapped")
         return sez_gdfs, not_in_poly_gdf
 

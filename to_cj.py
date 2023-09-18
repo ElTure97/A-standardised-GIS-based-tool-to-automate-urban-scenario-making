@@ -53,7 +53,7 @@ Please choose among the list above the categories you want to map to each of the
 building archetype, paying attention to avoid typos.
 
 ***PAY ATTENTION PLEASE***
-Categories strings must be put for each field, just separated by blank spaces (no commas).
+Categories strings must be put for each field JUST SEPARATED BY BLANK SPACES (NO COMMAS)!
 
 You can discard the categories you do not want to focus on for that application.
 Press ENTER, if none of the building categories belong to the current archetype.
