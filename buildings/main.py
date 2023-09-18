@@ -108,8 +108,8 @@ print(f"No. of residential buildings: {len(pod_final_gdf)}")
 loc_object = BboxGenerator(address, dist, app_name)
 bbox = loc_object.generate_bbox()
 
-# Mapping z coordinate to buildings according to bounding box discretization
-print("Mapping buildings z coordinate...")
+# Mapping z coordinate to buildings according to bounding box discretisation
+print("Mapping Buildings elevation... ")
 z_gdf_obj = ElevationMapper(pod_final_gdf)
 z_gdf, grid = z_gdf_obj.get_elevation(crs, bbox, res, h_slm, required_columns)
 

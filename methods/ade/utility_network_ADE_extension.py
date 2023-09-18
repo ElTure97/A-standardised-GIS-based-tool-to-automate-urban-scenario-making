@@ -18,7 +18,7 @@ class UtilityNetworkADE:
         self.un_gdf_list = []
         self.un_elems_labels = []
         self.colors = []
-        self.line_height = 8  # default assumed value of distribution lines height
+        self.line_height = 8  # default value of lines height w.r.t. terrain level assumed w.r.t. terrain level
 
     def load_pp(self, path):
         network = pp.from_pickle(path)
@@ -96,7 +96,12 @@ class UtilityNetworkADE:
 
     # Getting elevations of network objects through APIs, set to default city height ASL in case of failed requests
     def get_elevations(self, gdf, h_slm, max_retry, delay):
-        points = [(elem['geometry']) for _, elem in gdf.iterrows()]
+        points = []
+        for _, elem in gdf.iterrows():
+            if isinstance(elem['geometry'], Point):
+                points.append(elem['geometry'])
+            elif isinstance(elem['geometry'], LineString):
+                points.extend(Point(coord) for coord in elem['geometry'].coords)
         elevs = self.send_get_or_post_request(points, h_slm, max_retry, delay)
         updated_geometries = []
         for geom, elev in zip(gdf['geometry'], elevs):
@@ -117,7 +122,8 @@ class UtilityNetworkADE:
 
     # Sending requests
     def send_get_or_post_request(self, points, h_slm, max_retry, delay):
-        url = "https://api.open-elevation.com/api/v1/lookup"
+        locations = "|".join([f"{point.y},{point.x}" for point in points])
+        url = f"https://api.open-elevation.com/api/v1/lookup?locations={locations}"
         batch_size = 100  # number of points to send in each POST request
         elevations = [np.nan] * len(points)  # initialize with NaNs
         retry_count = 0
@@ -145,7 +151,7 @@ class UtilityNetworkADE:
     def send_get_request(self, points, url, delay):
         response = requests.get(url)
         if response.status_code == 200:
-            print("Success!")
+            # print("Success!")
             data = response.json()
             elevations = [result["elevation"] for result in data["results"]]
             return elevations
@@ -164,7 +170,7 @@ class UtilityNetworkADE:
             response = requests.post(url, json=data)
 
             if response.status_code == 200:
-                print("Success!")
+                # print("Success!")
                 try:
                     batch_elevations = [result["elevation"] for result in response.json()["results"]]
                     elevations[i:i + len(batch_elevations)] = batch_elevations
@@ -228,6 +234,8 @@ class UtilityNetworkADE:
     # Mapping network data according to the Utility Network extension schema
     def map_ext(self, path, crs, zone, city, h_slm, bounding_box, lod):
         buses_gdf, loads_gdf, gens_gdf, trans_gdf, lines_gdf, switches_df = self.geometric_operations(path, crs, zone, bounding_box)
+
+        print("Mapping Utility Network elements elevation... ")
         buses_gdf = self.get_elevations(buses_gdf, h_slm, max_retry=10, delay=0.5)
         loads_gdf = self.get_elevations(loads_gdf, h_slm, max_retry=10, delay=0.5)
         gens_gdf = self.get_elevations(gens_gdf, h_slm, max_retry=10, delay=0.5)
@@ -536,7 +544,7 @@ class UtilityNetworkADE:
         self.buildings_gdf.plot(ax=ax, color='purple', edgecolor='purple', label='buildings', aspect=1)
 
         for un_gdf, color, label in zip(self.un_gdf_list, self.colors, self.un_elems_labels):
-            un_gdf.plot(ax=ax, color=color, linewidth=4, label=label, aspect=1)
+            un_gdf.plot(ax=ax, color=color, linewidth=3, label=label, aspect=1)
 
         plt.title(f"Buildings and Utility Network {city}")
         plt.xlabel("Longitude")

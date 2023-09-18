@@ -28,6 +28,8 @@ sez_meta = config_data["sezioni_di_censimento"]["metadata"]["metadata_file"]
 fields = config_data["sezioni_di_censimento"]["metadata"]["fields"]
 id_to_filter = config_data["sezioni_di_censimento"]["metadata"]["id_to_select"]
 
+print("Loading input data...")
+
 # Loading OpenStreetMap data
 osm_data = OSM2GeoDF(address, distance, target, required_columns, crs)
 gdf = osm_data.get_gdf_from_osm()
@@ -75,4 +77,5 @@ total_time = end_time - start_time
 hours, diff = divmod(total_time, 3600)
 minutes, seconds = divmod(diff, 60)
 
-print(f"Data loading carried out in: {int(hours)} h, {int(minutes)} min, {int(seconds)} s")
+print(f"Data successfully loaded in: {int(hours)} h, {int(minutes)} min, {int(seconds)} s")
+print("Now ready for processing!")

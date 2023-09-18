@@ -109,7 +109,7 @@ class ElevationMapper:
             response = requests.get(url)
 
             if response.status_code == 200:
-                print("Success!")
+                # print("Success!")
                 data = response.json()
                 elevations = [result["elevation"] for result in data["results"]]
                 return elevations

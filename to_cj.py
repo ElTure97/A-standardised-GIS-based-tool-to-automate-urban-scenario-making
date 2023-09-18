@@ -46,14 +46,14 @@ for bld_cat in building_filtering_values:
     print(bld_cat)
 print(f'''
 ***CONFIGURATION STEP***
-In the following step, you will be required to type the building categories you want to store 
+In the following step, you will be required to type the building categories you want to store
 as Apartment Blocks (AB), Single Family Houses (SFH), Multi Family Houses (MFH), Terraced House (TH),
 or not-specified for very generic categories.
 Please choose among the list above the categories you want to map to each of the above-mentioned
 building archetype, paying attention to avoid typos.
 
 ***PAY ATTENTION PLEASE***
-Categories strings must be put for each field, just separated by blank spaces (no commas). 
+Categories strings must be put for each field, just separated by blank spaces (no commas).
 
 You can discard the categories you do not want to focus on for that application.
 Press ENTER, if none of the building categories belong to the current archetype.

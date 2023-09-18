@@ -18,21 +18,42 @@
     "resolution": 200,
     "target": "building",
     "building_target": "residential",
-    "building_filtering_values": {
-        "not_specified": [
-            "yes",
-            "residential"
-        ],
-        "AB": [
-            "apartments",
-            "dormitory"
-        ],
-        "SFH": [
-            "detached"
-        ],
-        "MFH": [],
-        "TH": []
-    },
+    "building_filtering_values": [
+        "kiosk",
+        "office",
+        "yes",
+        "church",
+        "retail",
+        "residential",
+        "parking",
+        "cathedral",
+        "theatre",
+        "public",
+        "dormitory",
+        "apartments",
+        "train_station",
+        "castle",
+        "commercial",
+        "school",
+        "roof",
+        "cinema",
+        "basilica",
+        "bridge",
+        "university",
+        "hospital",
+        "college",
+        "hotel",
+        "tower",
+        "garage",
+        "shed",
+        "kindergarten",
+        "service",
+        "detached",
+        "government",
+        "garages",
+        "industrial",
+        "house"
+    ],
     "required_features": [
         "geometry",
         "height",
