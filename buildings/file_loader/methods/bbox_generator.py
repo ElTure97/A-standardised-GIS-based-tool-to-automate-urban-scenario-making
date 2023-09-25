@@ -11,6 +11,6 @@ class BboxGenerator:
         location = geolocator.geocode(self.address)
         lon = location.longitude
         lat = location.latitude
-        delta = self.distance/(1000*111.32) # the distance is expressed in km and must be corrected
+        delta = self.distance/(1000*111.32) # the distance is expressed in m and must be corrected
         bounding_box = (lon-delta, lat-delta, lon+delta, lat+delta)
         return bounding_box
