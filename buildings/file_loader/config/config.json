@@ -28,7 +28,8 @@
             "dormitory"
         ],
         "SFH": [
-            "detached"
+            "detached",
+            "house"
         ],
         "MFH": [],
         "TH": []
