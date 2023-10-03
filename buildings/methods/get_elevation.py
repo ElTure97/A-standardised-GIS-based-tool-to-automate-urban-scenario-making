@@ -77,7 +77,7 @@ class ElevationMapper:
             else:
                 # To be defined what it should be done in case of different geometry type with respect to Point, Polygon or MultiPolygon
                 pass
-            print(f"Z coordinate successfully mapped to building {i + 1}")
+            print(f"Z coordinates successfully mapped to building {i + 1}")
         return self.gdf, cells
 
     def get_elevation_for_point(self, crs, cells, cells_elevs, lat, lon, h_slm):
